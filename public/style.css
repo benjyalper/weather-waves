@@ -230,6 +230,8 @@ main {
   line-height: 1;
   margin-bottom: 4px;
   letter-spacing: -1px;
+  direction: ltr;        /* keep numbers + units in correct LTR order */
+  unicode-bidi: isolate;
 }
 
 .card-weather .card-value {
