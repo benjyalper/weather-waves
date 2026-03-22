@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather 'n' Waves</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── Loading overlay (shown while fetching data) ─────────────────────── -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p class="loading-text">טוען נתונים...</p>
+  </div>
+
+  <!-- ─── Header: title + Hebrew week calendar ─────────────────────────────── -->
+  <header>
+    <h1 class="app-title">🌊 Weather 'n' Waves</h1>
+
+    <!-- Hebrew letter days: א=Sun ב=Mon ג=Tue ד=Wed ה=Thu ו=Fri ש=Sat -->
+    <div class="calendar" id="calendar" aria-label="ימי השבוע">
+      <!-- Filled by script.js -->
+    </div>
+
+    <p class="city-label" id="cityLabel"></p>
+    <!-- Shows which day is currently selected -->
+    <p class="viewing-label" id="viewingLabel"></p>
+  </header>
+
+  <!-- ─── Main content ──────────────────────────────────────────────────────── -->
+  <main>
+
+    <!-- Error banner (hidden by default) -->
+    <div class="error-banner" id="errorBanner" role="alert"></div>
+
+    <!-- Two equal cards -->
+    <div class="cards">
+
+      <!-- Weather card -->
+      <div class="card card-weather">
+        <div class="card-title">מזג אוויר</div>
+        <div class="card-icon" id="weatherIcon">
+          <!-- SVG injected by script.js -->
+        </div>
+        <div class="card-value" id="weatherTemp">--</div>
+        <div class="card-label" id="weatherLabel">--</div>
+      </div>
+
+      <!-- Waves card -->
+      <div class="card card-waves">
+        <div class="card-title">גלים</div>
+        <div class="card-icon" id="waveIcon">
+          <!-- SVG injected by script.js -->
+        </div>
+        <div class="card-value" id="waveHeight">--</div>
+        <div class="card-secondary" id="waterTemp"></div>
+        <div class="card-label" id="waveLabel">--</div>
+      </div>
+
+    </div><!-- /cards -->
+
+  </main>
+
+  <!-- ─── Footer: last updated ─────────────────────────────────────────────── -->
+  <footer>
+    <span id="lastUpdated">טרם עודכן</span>
+    &nbsp;·&nbsp;
+    <span>מתרענן כל 30 דקות</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
