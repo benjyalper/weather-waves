@@ -10,6 +10,9 @@ const https   = require('https');
 const http    = require('http');
 const path    = require('path');
 
+// Generate the home-screen icon PNG before serving (works on Railway too)
+require('./generate-icon');
+
 const app  = express();
 const PORT = process.env.PORT || 3008;
 

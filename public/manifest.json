@@ -1,0 +1,17 @@
+{
+  "name": "Weather 'n' Waves",
+  "short_name": "Waves",
+  "description": "Weather and sea conditions for Neve Yam",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D47A1",
+  "theme_color": "#0288D1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
