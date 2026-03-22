@@ -13,8 +13,12 @@ const zlib = require('zlib');
 const fs   = require('fs');
 const path = require('path');
 
-const OUT  = path.join(__dirname, 'public', 'apple-touch-icon.png');
-const W = 180, H = 180;
+// Sizes to generate: iOS needs 180, Android needs 192 + 512
+const ICONS = [
+  { file: 'apple-touch-icon.png', size: 180 },
+  { file: 'icon-192.png',         size: 192 },
+  { file: 'icon-512.png',         size: 512 },
+];
 
 // ─── CRC-32 (required by PNG spec) ───────────────────────────────────────────
 const CRC_TABLE = (() => {
@@ -45,7 +49,7 @@ function makeChunk(type, data) {
 // ─── Pixel painter ───────────────────────────────────────────────────────────
 function clamp(v) { return Math.min(255, Math.max(0, Math.round(v))); }
 
-function getPixel(x, y) {
+function getPixel(x, y, W, H) {
   const cx = x / (W - 1);   // 0..1
   const cy = y / (H - 1);   // 0..1
 
@@ -108,14 +112,14 @@ function getPixel(x, y) {
   return [r, g, b];
 }
 
-// ─── Build PNG ────────────────────────────────────────────────────────────────
-function buildPNG() {
+// ─── Build PNG at any size ────────────────────────────────────────────────────
+function buildPNG(W, H) {
   // Raw scanlines: 1 filter byte (0 = None) + W*3 RGB bytes per row
   const raw = Buffer.allocUnsafe(H * (1 + W * 3));
   for (let y = 0; y < H; y++) {
     raw[y * (1 + W * 3)] = 0;
     for (let x = 0; x < W; x++) {
-      const [r, g, b] = getPixel(x, y);
+      const [r, g, b] = getPixel(x, y, W, H);
       const off = y * (1 + W * 3) + 1 + x * 3;
       raw[off] = r; raw[off + 1] = g; raw[off + 2] = b;
     }
@@ -140,7 +144,10 @@ function buildPNG() {
   ]);
 }
 
-// ─── Write file ───────────────────────────────────────────────────────────────
-const png = buildPNG();
-fs.writeFileSync(OUT, png);
-console.log(`Icon generated: ${OUT} (${png.length} bytes)`);
+// ─── Write all icon sizes ─────────────────────────────────────────────────────
+for (const { file, size } of ICONS) {
+  const out = path.join(__dirname, 'public', file);
+  const png = buildPNG(size, size);
+  fs.writeFileSync(out, png);
+  console.log(`Icon generated: ${file} (${size}×${size}, ${png.length} bytes)`);
+}
