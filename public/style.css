@@ -106,6 +106,12 @@ header {
   opacity: 1;
 }
 
+/* Past days — greyed out, not interactive */
+.day-cell.past {
+  opacity: 0.35;
+  cursor: default !important;
+}
+
 /* Selected day (not necessarily today) */
 .day-cell.active:not(.today) {
   background: rgba(255, 255, 255, 0.38);

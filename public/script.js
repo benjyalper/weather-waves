@@ -419,47 +419,50 @@ function renderDay(dayIdx) {
 }
 
 // ─── Build the forecast calendar in the header ───────────────────────────────
-// Accepts the `daily` object from Open-Meteo and renders 7 day cells,
-// each showing: Hebrew day letter + weather emoji + max temperature.
+// Always renders all 7 day-of-week cells in fixed order (א=Sun … ש=Sat).
+// Because the page is dir="rtl", flexbox places the first DOM child on the
+// RIGHT → א ends up on the right, ש on the left, exactly as in Hebrew.
+// Past days (before today) are shown greyed-out and non-clickable.
 function buildCalendar(daily) {
-  const container = document.getElementById('calendar');
+  const container  = document.getElementById('calendar');
   container.innerHTML = '';
-  const todayStr = new Date().toISOString().slice(0, 10); // "2025-03-22"
+  const todayDow   = new Date().getDay(); // 0=Sun … 6=Sat
 
-  // If no forecast data yet, fall back to plain letter cells
-  if (!daily || !daily.time) {
-    HEBREW_DAYS.forEach((letter, i) => {
-      const cell = document.createElement('div');
-      cell.className = 'day-cell' + (i === new Date().getDay() ? ' today' : '');
-      cell.innerHTML = `<span class="day-letter">${letter}</span>`;
-      container.appendChild(cell);
-    });
-    document.getElementById('cityLabel').textContent = CITY;
-    return;
-  }
-
-  daily.time.forEach((dateStr, i) => {
-    // Use noon local time to avoid UTC date-shift edge cases
-    const date       = new Date(dateStr + 'T12:00:00');
-    const dayOfWeek  = date.getDay();                          // 0=Sun…6=Sat
-    const letter     = HEBREW_DAYS[dayOfWeek];
-    const isToday    = dateStr === todayStr;
-    const category   = getWeatherCategory(daily.weathercode[i]);
-    const emoji      = WEATHER_EMOJI[category];
-    const maxTemp    = Math.round(daily.temperature_2m_max[i]);
+  HEBREW_DAYS.forEach((letter, dow) => {
+    // How many days away from today is this day-of-week slot?
+    // negative = already passed this week, 0 = today, positive = upcoming
+    const offset  = dow - todayDow;
+    // Index into daily.time[] — only valid when offset is 0…6
+    const apiIdx  = (offset >= 0 && daily && offset < daily.time.length)
+                    ? offset : -1;
+    const isToday = offset === 0;
+    const isPast  = offset < 0;
 
     const cell = document.createElement('div');
-    cell.className = 'day-cell' + (isToday ? ' today' : '');
-    if (i === gSelectedDay) cell.classList.add('active');
-    cell.title = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][dayOfWeek];
-    cell.style.cursor = 'pointer';
-    cell.innerHTML = `
-      <span class="day-letter">${letter}</span>
-      <span class="day-icon">${emoji}</span>
-      <span class="day-temp">${maxTemp}°</span>
-    `;
-    // Click → show that day's weather + waves in the cards
-    cell.addEventListener('click', () => renderDay(i));
+    const classes = ['day-cell'];
+    if (isToday)                          classes.push('today');
+    if (isPast)                           classes.push('past');
+    if (apiIdx === gSelectedDay && !isPast) classes.push('active');
+    cell.className = classes.join(' ');
+    cell.title = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][dow];
+
+    if (daily && apiIdx !== -1) {
+      // Has forecast data → show emoji + max temp
+      const category = getWeatherCategory(daily.weathercode[apiIdx]);
+      const emoji    = WEATHER_EMOJI[category];
+      const maxTemp  = Math.round(daily.temperature_2m_max[apiIdx]);
+      cell.style.cursor = 'pointer';
+      cell.innerHTML = `
+        <span class="day-letter">${letter}</span>
+        <span class="day-icon">${emoji}</span>
+        <span class="day-temp">${maxTemp}°</span>
+      `;
+      cell.addEventListener('click', () => renderDay(apiIdx));
+    } else {
+      // Past day or no data yet → letter only, not clickable
+      cell.innerHTML = `<span class="day-letter">${letter}</span>`;
+    }
+
     container.appendChild(cell);
   });
 
