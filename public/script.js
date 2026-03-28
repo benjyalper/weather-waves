@@ -333,11 +333,12 @@ let windAnimId  = null;   // requestAnimationFrame handle for wind
 let waveAnimId  = null;   // requestAnimationFrame handle for wave canvas
 
 // Wind speed (km/h) → particle colour
+// Darker tones so particles are visible on both sea and land tiles
 function windColour(kmh, alpha) {
-  if (kmh <  10) return `rgba(120, 210, 255, ${alpha})`;  // calm   — light blue
-  if (kmh <  30) return `rgba( 60, 230, 160, ${alpha})`;  // light  — green
-  if (kmh <  50) return `rgba(255, 220,  50, ${alpha})`;  // strong — yellow
-  return                 `rgba(255,  80,  50, ${alpha})`;  // storm  — red
+  if (kmh <  10) return `rgba( 30, 100, 210, ${alpha})`;  // calm   — dark blue
+  if (kmh <  30) return `rgba(  0, 160, 100, ${alpha})`;  // light  — teal
+  if (kmh <  50) return `rgba(200, 130,   0, ${alpha})`;  // strong — amber
+  return                 `rgba(210,  30,  30, ${alpha})`;  // storm  — red
 }
 
 // Degrees (meteorological) → Hebrew compass label
@@ -368,12 +369,11 @@ function initLeafletMap() {
     maxZoom: 19
   }).addTo(leafletMap);
 
-  // Gold dot marker for the location
+  // Small gold dot — city name already appears on the Voyager tile labels
   L.circleMarker([LAT, LON], {
-    radius: 7, fillColor: '#FFD600',
+    radius: 6, fillColor: '#FFD600',
     color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(leafletMap)
-    .bindTooltip(CITY, { permanent: true, direction: 'right', className: 'map-tooltip' });
+  }).addTo(leafletMap);
 }
 
 // Animated wind-particle system on the canvas overlay
@@ -385,8 +385,10 @@ function startWindAnimation(speedKmh, dirDeg) {
   if (windAnimId) { cancelAnimationFrame(windAnimId); windAnimId = null; }
 
   const wrapper = canvas.parentElement;
-  canvas.width  = wrapper.offsetWidth;
-  canvas.height = wrapper.offsetHeight;
+  // getBoundingClientRect gives the true rendered size (offsetWidth can lag layout)
+  const rect    = wrapper.getBoundingClientRect();
+  canvas.width  = Math.max(1, Math.round(rect.width));
+  canvas.height = Math.max(1, Math.round(rect.height));
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
 

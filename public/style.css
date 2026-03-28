@@ -196,8 +196,6 @@ header {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  width: 100% !important;
-  height: 100% !important;
 }
 
 /* Hide Leaflet attribution (tiny text) — keep for compliance via CSS */
