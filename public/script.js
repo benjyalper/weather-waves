@@ -369,11 +369,15 @@ function initLeafletMap() {
     maxZoom: 19
   }).addTo(leafletMap);
 
-  // Small gold dot — city name already appears on the Voyager tile labels
+  // Gold dot with permanent city-name tooltip
   L.circleMarker([LAT, LON], {
     radius: 6, fillColor: '#FFD600',
     color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(leafletMap);
+  }).addTo(leafletMap)
+    .bindTooltip(CITY, {
+      permanent: true, direction: 'right',
+      className: 'city-tooltip', offset: [8, 0]
+    }).openTooltip();
 }
 
 // Animated wind-particle system on the canvas overlay

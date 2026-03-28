@@ -201,6 +201,19 @@ header {
   pointer-events: none;
 }
 
+/* City name tooltip on the wind map */
+.city-tooltip {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: none !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2) !important;
+  color: #0D47A1 !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  padding: 2px 7px !important;
+}
+.city-tooltip::before { display: none !important; }
+
 /* Hide Leaflet attribution (tiny text) — keep for compliance via CSS */
 .leaflet-control-attribution {
   font-size: 9px !important;
