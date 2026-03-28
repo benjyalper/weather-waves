@@ -42,7 +42,7 @@ app.get('/api/weather', async (req, res) => {
   const url = `https://api.open-meteo.com/v1/forecast` +
               `?latitude=${lat}&longitude=${lon}` +
               `&current=temperature_2m,weathercode` +
-              `&hourly=temperature_2m,weathercode` +
+              `&hourly=temperature_2m,weathercode,wind_speed_10m,wind_direction_10m` +
               `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
               `&timezone=auto`;
   try {
@@ -61,7 +61,7 @@ app.get('/api/marine', async (req, res) => {
   const lon = parseFloat(req.query.lon) || 34.78;
   const url = `https://marine-api.open-meteo.com/v1/marine` +
               `?latitude=${lat}&longitude=${lon}` +
-              `&hourly=wave_height,sea_surface_temperature`;
+              `&hourly=wave_height,wave_direction,sea_surface_temperature`;
   try {
     const data = await fetchJSON(url);
     res.json(data);

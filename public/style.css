@@ -138,6 +138,82 @@ header {
   letter-spacing: 0.5px;
 }
 
+/* ─── Wind Map Section ───────────────────────────────────────────────────────── */
+.wind-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 18px 0;
+}
+
+.wind-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.wind-section-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.wind-badge {
+  background: rgba(255,255,255,0.18);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.wind-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+
+/* Leaflet map fills the wrapper */
+#windMap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Wind particle canvas sits on top, non-interactive */
+#windCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Hide Leaflet attribution (tiny text) — keep for compliance via CSS */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  opacity: 0.5;
+}
+
+/* ─── Wave Canvas (inside waves card) ────────────────────────────────────────── */
+.wave-canvas {
+  width: 100%;
+  height: 80px;
+  border-radius: 10px;
+  margin-top: 12px;
+  display: block;
+}
+
 /* ─── Main ───────────────────────────────────────────────────────────────────── */
 main {
   max-width: 860px;

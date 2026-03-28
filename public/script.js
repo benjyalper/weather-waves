@@ -326,6 +326,208 @@ const WAVE_ICONS = {
   'high':   iconWaveHigh
 };
 
+// ─── Wind & Wave Animation ────────────────────────────────────────────────────
+
+let leafletMap  = null;   // Leaflet map instance (created once)
+let windAnimId  = null;   // requestAnimationFrame handle for wind
+let waveAnimId  = null;   // requestAnimationFrame handle for wave canvas
+
+// Wind speed (km/h) → particle colour
+function windColour(kmh, alpha) {
+  if (kmh <  10) return `rgba(120, 210, 255, ${alpha})`;  // calm   — light blue
+  if (kmh <  30) return `rgba( 60, 230, 160, ${alpha})`;  // light  — green
+  if (kmh <  50) return `rgba(255, 220,  50, ${alpha})`;  // strong — yellow
+  return                 `rgba(255,  80,  50, ${alpha})`;  // storm  — red
+}
+
+// Degrees (meteorological) → Hebrew compass label
+function windDirHebrew(deg) {
+  const dirs = ['צפון','צפון-מזרח','מזרח','דרום-מזרח','דרום','דרום-מערב','מערב','צפון-מערב'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+// Initialise Leaflet map once (dark CartoDB tiles, no API key needed)
+function initLeafletMap() {
+  if (leafletMap) return;
+
+  leafletMap = L.map('windMap', {
+    center: [LAT, LON],
+    zoom: 9,
+    zoomControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    keyboard: false,
+    attributionControl: true
+  });
+
+  // CartoDB dark basemap — free, no API key
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(leafletMap);
+
+  // Gold dot marker for the location
+  L.circleMarker([LAT, LON], {
+    radius: 7, fillColor: '#FFD600',
+    color: '#fff', weight: 2, fillOpacity: 1
+  }).addTo(leafletMap)
+    .bindTooltip(CITY, { permanent: true, direction: 'right', className: 'map-tooltip' });
+}
+
+// Animated wind-particle system on the canvas overlay
+// Uses clearRect each frame + trail history so the Leaflet map shows through
+function startWindAnimation(speedKmh, dirDeg) {
+  const canvas = document.getElementById('windCanvas');
+  if (!canvas) return;
+
+  if (windAnimId) { cancelAnimationFrame(windAnimId); windAnimId = null; }
+
+  const wrapper = canvas.parentElement;
+  canvas.width  = wrapper.offsetWidth;
+  canvas.height = wrapper.offsetHeight;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  // Meteorological direction = where wind comes FROM → flip 180° to get travel vector
+  const travelDeg = (dirDeg + 180) % 360;
+  const rad       = travelDeg * Math.PI / 180;
+  const speed     = Math.max(0.5, speedKmh * 0.038);
+  const vx = Math.sin(rad) * speed;
+  const vy = -Math.cos(rad) * speed;
+
+  const N         = 220;
+  const MAX_TRAIL = 14; // positions stored per particle → visible trail length
+
+  function spawnPos(random) {
+    if (random) return { x: Math.random() * W, y: Math.random() * H };
+    // spawn from the upwind edge so particles travel across the whole map
+    if (Math.abs(vx) >= Math.abs(vy)) {
+      return { x: vx > 0 ? 0 : W, y: Math.random() * H };
+    }
+    return { x: Math.random() * W, y: vy > 0 ? 0 : H };
+  }
+
+  const particles = Array.from({ length: N }, () => {
+    const pos = spawnPos(true);
+    return {
+      x: pos.x, y: pos.y,
+      history: [],
+      age:  Math.floor(Math.random() * 80),
+      life: 55 + Math.random() * 65,
+      spd:  0.5 + Math.random() * 0.9
+    };
+  });
+
+  function frame() {
+    // Clear to transparent every frame — Leaflet map tiles show through
+    ctx.clearRect(0, 0, W, H);
+
+    particles.forEach(p => {
+      // Store position in trail, limit length
+      p.history.push({ x: p.x, y: p.y });
+      if (p.history.length > MAX_TRAIL) p.history.shift();
+
+      p.x  += vx * p.spd;
+      p.y  += vy * p.spd;
+      p.age++;
+
+      // Draw trail: older segments are more transparent
+      const lifeFade = Math.sin((p.age / p.life) * Math.PI);
+      for (let i = 1; i < p.history.length; i++) {
+        const t     = i / p.history.length;          // 0=tail, 1=head
+        const alpha = t * lifeFade * 0.88;
+        ctx.strokeStyle = windColour(speedKmh, alpha);
+        ctx.lineWidth   = 0.8 + t * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(p.history[i - 1].x, p.history[i - 1].y);
+        ctx.lineTo(p.history[i].x,     p.history[i].y);
+        ctx.stroke();
+      }
+
+      if (p.age >= p.life || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
+        const pos = spawnPos(false);
+        p.x = pos.x; p.y = pos.y;
+        p.history = [];
+        p.age  = 0;
+        p.life = 55 + Math.random() * 65;
+        p.spd  = 0.5 + Math.random() * 0.9;
+      }
+    });
+
+    windAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// Animated wave layers inside the wave card canvas
+function startWaveAnimation(waveHeightM, waveDirDeg) {
+  const canvas = document.getElementById('waveCanvas');
+  if (!canvas) return;
+
+  if (waveAnimId) { cancelAnimationFrame(waveAnimId); waveAnimId = null; }
+
+  canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+  canvas.height = canvas.offsetHeight || 80;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  // Amplitude scales with wave height (capped so it stays inside the canvas)
+  const amplitude = Math.min(H * 0.38, Math.max(4, waveHeightM * 10));
+  const numLayers = 3;
+
+  // Wave direction (oceanographic: direction waves travel TOWARD)
+  const dirRad = (waveDirDeg ?? 270) * Math.PI / 180;
+  const phaseSpeedX =  Math.sin(dirRad) * 0.045;  // horizontal phase advance
+  const phaseSpeedY = -Math.cos(dirRad) * 0.02;    // slight vertical drift
+
+  let phase = 0;
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = 0; i < numLayers; i++) {
+      const layerOffset = (i / numLayers) * Math.PI * 2;
+      const yBase       = H * (0.30 + i * 0.18);
+      const opacity     = 0.25 + (i / numLayers) * 0.45;
+      const amp         = amplitude * (1 - i * 0.22);
+
+      // Wave path
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      for (let x = 0; x <= W; x += 2) {
+        const y = yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, yBase - amp, 0, H);
+      grad.addColorStop(0, `rgba(41, 182, 246, ${opacity})`);
+      grad.addColorStop(1, `rgba(1,  87, 155, ${opacity * 0.45})`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // White crest highlight
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      for (let x = 0; x <= W; x += 2) {
+        const y = yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.55})`;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    }
+
+    phase += phaseSpeedX || 0.04;
+    waveAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
 // ─── Time slots definition ────────────────────────────────────────────────────
 // Three representative hours shown inside each card
 const TIME_SLOTS = [
@@ -427,6 +629,26 @@ function renderDay(dayIdx) {
     `;
     waveSlots.appendChild(slot);
   });
+
+  // ── Wind map + wave canvas animations ──
+  // Use the active time-slot hour (today) or noon (future days) as representative
+  const animHour = dayIdx === 0
+    ? TIME_SLOTS.find(s => s.key === getCurrentSlotKey()).hour
+    : 13;
+  const wIdx = findHourIndex(wHourly.time, dateStr, animHour);
+  const mIdx = findHourIndex(marineHourly.time, dateStr, animHour);
+
+  const windSpeedKmh = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]      ?? 0)   : 0;
+  const windDirDeg   = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx]  ?? 0)   : 0;
+  const waveDirDeg   = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
+  const waveHeightM  = mIdx !== -1 ? (marineHourly.wave_height?.[mIdx]    ?? 0.5) : 0.5;
+
+  document.getElementById('windBadge').textContent =
+    `${Math.round(windSpeedKmh)} km/h · ${windDirHebrew(windDirDeg)}`;
+
+  initLeafletMap();
+  startWindAnimation(windSpeedKmh, windDirDeg);
+  startWaveAnimation(waveHeightM,  waveDirDeg);
 }
 
 // ─── Build the forecast calendar in the header ───────────────────────────────
@@ -499,54 +721,6 @@ function showError(msg) {
   }
 }
 
-// ─── Update the Weather card ──────────────────────────────────────────────────
-function renderWeather(data) {
-  const temp = data.current?.temperature_2m;
-  const code = data.current?.weathercode;
-
-  if (temp == null || code == null) {
-    showError('לא ניתן לקרוא נתוני מזג אוויר');
-    return;
-  }
-
-  const category = getWeatherCategory(code);
-
-  document.getElementById('weatherIcon').innerHTML  = WEATHER_ICONS[category]();
-  document.getElementById('weatherTemp').textContent = `${Math.round(temp)}°C`;
-  document.getElementById('weatherLabel').textContent = WEATHER_LABELS[category];
-}
-
-// ─── Update the Waves card ────────────────────────────────────────────────────
-function renderMarine(data) {
-  const hourly = data.hourly;
-  if (!hourly) {
-    showError('לא ניתן לקרוא נתוני ים');
-    return;
-  }
-
-  const idx         = findCurrentHourIndex(hourly.time);
-  const waveHeight  = hourly.wave_height?.[idx];
-  const waterTemp   = hourly.sea_surface_temperature?.[idx];
-
-  if (waveHeight == null) {
-    document.getElementById('waveHeight').textContent  = '--';
-    document.getElementById('waveLabel').textContent   = '--';
-    document.getElementById('waveIcon').innerHTML      = iconWaveFlat();
-  } else {
-    const category = getWaveCategory(waveHeight);
-    document.getElementById('waveIcon').innerHTML      = WAVE_ICONS[category]();
-    document.getElementById('waveHeight').textContent  = `${waveHeight.toFixed(1)} m`;
-    document.getElementById('waveLabel').textContent   = WAVE_LABELS[category];
-  }
-
-  // Water temperature (may be missing in some regions)
-  const waterTempEl = document.getElementById('waterTemp');
-  if (waterTemp != null) {
-    waterTempEl.textContent = `🌡 טמפרטורת המים: ${Math.round(waterTemp)}°C`;
-  } else {
-    waterTempEl.textContent = '🌡 טמפרטורת המים: --';
-  }
-}
 
 // ─── Update "last updated" timestamp in footer ────────────────────────────────
 function updateTimestamp() {

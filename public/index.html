@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Waves" />
   <meta name="theme-color" content="#0288D1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -35,6 +36,20 @@
     <p class="viewing-label" id="viewingLabel"></p>
   </header>
 
+  <!-- ─── Wind Map Section ────────────────────────────────────────────────────── -->
+  <section class="wind-section">
+    <div class="wind-section-header">
+      <span class="wind-section-title">💨 רוח</span>
+      <span class="wind-badge" id="windBadge">--</span>
+    </div>
+    <div class="wind-map-wrapper">
+      <!-- Leaflet map as background -->
+      <div id="windMap"></div>
+      <!-- Canvas for animated wind particles (on top of map) -->
+      <canvas id="windCanvas"></canvas>
+    </div>
+  </section>
+
   <!-- ─── Main content ──────────────────────────────────────────────────────── -->
   <main>
 
@@ -58,6 +73,8 @@
         <div class="time-slots" id="waveSlots">
           <!-- 3 slots (morning/noon/evening) injected by script.js -->
         </div>
+        <!-- Animated wave canvas (height/direction driven) -->
+        <canvas id="waveCanvas" class="wave-canvas"></canvas>
       </div>
 
     </div><!-- /cards -->
@@ -71,6 +88,7 @@
     <span>מתרענן כל 30 דקות</span>
   </footer>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
