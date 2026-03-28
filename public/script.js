@@ -368,11 +368,7 @@ function initLeafletMap() {
     maxZoom: 19
   }).addTo(leafletMap);
 
-  // Small gold dot — city name appears on the OSM tile labels
-  L.circleMarker([LAT, LON], {
-    radius: 6, fillColor: '#FFD600',
-    color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(leafletMap);
+
 }
 
 // Animated wind-particle system on the canvas overlay
