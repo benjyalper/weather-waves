@@ -355,6 +355,33 @@ main {
   min-height: 1.2em;
 }
 
+/* ─── Sun Times ─────────────────────────────────────────────────────────────── */
+.sun-times {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 12px;
+  padding: 7px 16px;
+  background: #FFF8E1;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.sun-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #E65100;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.sun-item .sun-icon {
+  font-size: 1rem;
+}
+
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */
 footer {
   text-align: center;

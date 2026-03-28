@@ -648,9 +648,30 @@ function renderDay(dayIdx) {
   document.getElementById('windBadge').textContent =
     `${Math.round(windSpeedKmh)} km/h · ${windDirHebrew(windDirDeg)}`;
 
+  renderSunTimes(gWeatherData.daily, dayIdx);
+
   initLeafletMap();
   startWindAnimation(windSpeedKmh, windDirDeg);
   startWaveAnimation(waveHeightM,  waveDirDeg);
+}
+
+// ─── Render sunrise / sunset for the selected day ────────────────────────────
+function renderSunTimes(daily, dayIdx) {
+  const el = document.getElementById('sunTimes');
+  if (!el) return;
+  if (!daily || !daily.sunrise || !daily.sunset) { el.innerHTML = ''; return; }
+
+  const riseRaw = daily.sunrise[dayIdx] || '';
+  const setRaw  = daily.sunset[dayIdx]  || '';
+
+  // Times come as "2025-03-28T05:42" — extract HH:MM
+  const rise = riseRaw.slice(11, 16);
+  const set  = setRaw.slice(11, 16);
+
+  el.innerHTML = `
+    <span class="sun-item"><span class="sun-icon">🌅</span>${rise}</span>
+    <span class="sun-item"><span class="sun-icon">🌇</span>${set}</span>
+  `;
 }
 
 // ─── Build the forecast calendar in the header ───────────────────────────────

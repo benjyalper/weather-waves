@@ -43,7 +43,7 @@ app.get('/api/weather', async (req, res) => {
               `?latitude=${lat}&longitude=${lon}` +
               `&current=temperature_2m,weathercode` +
               `&hourly=temperature_2m,weathercode,wind_speed_10m,wind_direction_10m` +
-              `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
+              `&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset` +
               `&timezone=auto`;
   try {
     const data = await fetchJSON(url);
