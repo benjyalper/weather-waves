@@ -328,10 +328,9 @@ const WAVE_ICONS = {
 
 // ─── Wind & Wave Animation ────────────────────────────────────────────────────
 
-let leafletMap    = null;   // wind map instance
-let waveMap       = null;   // wave map instance (inside the גלים card)
-let windAnimId    = null;
-let whitecapAnimId = null;
+let leafletMap  = null;   // Leaflet map instance (created once)
+let windAnimId  = null;   // requestAnimationFrame handle for wind
+let waveAnimId  = null;   // requestAnimationFrame handle for wave canvas
 
 // Wind speed (km/h) → particle colour
 // Darker tones so particles are visible on both sea and land tiles
@@ -464,127 +463,69 @@ function startWindAnimation(speedKmh, dirDeg) {
   frame();
 }
 
-// Leaflet map inside the גלים card (initialised once)
-function initWaveMap() {
-  if (waveMap) return;
-  const el = document.getElementById('waveMap');
-  if (!el) return;
-
-  waveMap = L.map('waveMap', {
-    center: [LAT, LON],
-    zoom: 10,
-    zoomControl: false,
-    dragging: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
-    keyboard: false,
-    attributionControl: false
-  });
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(waveMap);
-
-  // Small gold dot — label comes from map tiles
-  L.circleMarker([LAT, LON], {
-    radius: 5, fillColor: '#FFD600',
-    color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(waveMap);
-}
-
-// White foam/whitecap lines flowing in wave direction (like Windy's wave view)
-function startWhitecapAnimation(waveHeightM, waveDirDeg) {
-  const canvas = document.getElementById('whitecapCanvas');
+// Animated wave layers inside the wave card canvas
+function startWaveAnimation(waveHeightM, waveDirDeg) {
+  const canvas = document.getElementById('waveCanvas');
   if (!canvas) return;
 
-  if (whitecapAnimId) { cancelAnimationFrame(whitecapAnimId); whitecapAnimId = null; }
+  if (waveAnimId) { cancelAnimationFrame(waveAnimId); waveAnimId = null; }
 
-  const wrapper = canvas.parentElement;
-  const rect    = wrapper.getBoundingClientRect();
-  canvas.width  = Math.max(1, Math.round(rect.width));
-  canvas.height = Math.max(1, Math.round(rect.height));
+  canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+  canvas.height = canvas.offsetHeight || 80;
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
 
-  // Wave travel direction vector
-  const dirRad   = (waveDirDeg ?? 270) * Math.PI / 180;
-  const spd      = Math.max(0.35, waveHeightM * 0.38 + 0.2);
-  const vx = Math.sin(dirRad) * spd;
-  const vy = -Math.cos(dirRad) * spd;
+  // Amplitude scales with wave height (capped so it stays inside the canvas)
+  const amplitude = Math.min(H * 0.38, Math.max(4, waveHeightM * 10));
+  const numLayers = 3;
 
-  // Perpendicular axis for slight sinusoidal wobble (foam curl effect)
-  const len    = Math.sqrt(vx * vx + vy * vy) || 1;
-  const perpX  = -vy / len;
-  const perpY  =  vx / len;
+  // Wave direction (oceanographic: direction waves travel TOWARD)
+  const dirRad = (waveDirDeg ?? 270) * Math.PI / 180;
+  const phaseSpeedX =  Math.sin(dirRad) * 0.045;  // horizontal phase advance
+  const phaseSpeedY = -Math.cos(dirRad) * 0.02;    // slight vertical drift
 
-  // More particles for higher waves
-  const N        = Math.round(70 + waveHeightM * 55);
-  const MAX_TRAIL = 9;
-
-  function spawnPos(random) {
-    if (random) return { x: Math.random() * W, y: Math.random() * H };
-    if (Math.abs(vx) >= Math.abs(vy)) {
-      return { x: vx > 0 ? 0 : W, y: Math.random() * H };
-    }
-    return { x: Math.random() * W, y: vy > 0 ? 0 : H };
-  }
-
-  const particles = Array.from({ length: N }, () => {
-    const p = spawnPos(true);
-    return {
-      x: p.x, y: p.y,
-      history: [],
-      age:    Math.floor(Math.random() * 50),
-      life:   35 + Math.random() * 45,
-      spd:    0.5 + Math.random() * 0.7,
-      phase:  Math.random() * Math.PI * 2,
-      wobble: 0.5 + Math.random() * 1.8
-    };
-  });
+  let phase = 0;
 
   function frame() {
     ctx.clearRect(0, 0, W, H);
-    ctx.lineCap = 'round';
 
-    particles.forEach(p => {
-      // Slight sinusoidal curl perpendicular to travel
-      const w  = Math.sin(p.age * 0.28 + p.phase) * p.wobble;
-      const cx = p.x + perpX * w;
-      const cy = p.y + perpY * w;
+    for (let i = 0; i < numLayers; i++) {
+      const layerOffset = (i / numLayers) * Math.PI * 2;
+      const yBase       = H * (0.30 + i * 0.18);
+      const opacity     = 0.25 + (i / numLayers) * 0.45;
+      const amp         = amplitude * (1 - i * 0.22);
 
-      p.history.push({ x: cx, y: cy });
-      if (p.history.length > MAX_TRAIL) p.history.shift();
-
-      p.x  += vx * p.spd;
-      p.y  += vy * p.spd;
-      p.age++;
-
-      const lifeFade = Math.sin((p.age / p.life) * Math.PI);
-
-      for (let i = 1; i < p.history.length; i++) {
-        const t     = i / p.history.length;   // 0=tail → 1=head
-        const alpha = t * lifeFade * 0.88;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.lineWidth   = 0.5 + t * 1.1;
-        ctx.beginPath();
-        ctx.moveTo(p.history[i - 1].x, p.history[i - 1].y);
-        ctx.lineTo(p.history[i].x,     p.history[i].y);
-        ctx.stroke();
+      // Wave path
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      for (let x = 0; x <= W; x += 2) {
+        const y = yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp;
+        ctx.lineTo(x, y);
       }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
 
-      if (p.age >= p.life || p.x < -10 || p.x > W + 10 || p.y < -10 || p.y > H + 10) {
-        const pos = spawnPos(false);
-        p.x = pos.x; p.y = pos.y;
-        p.history = [];
-        p.age    = 0;
-        p.life   = 35 + Math.random() * 45;
-        p.spd    = 0.5 + Math.random() * 0.7;
-        p.phase  = Math.random() * Math.PI * 2;
+      const grad = ctx.createLinearGradient(0, yBase - amp, 0, H);
+      grad.addColorStop(0, `rgba(41, 182, 246, ${opacity})`);
+      grad.addColorStop(1, `rgba(1,  87, 155, ${opacity * 0.45})`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // White crest highlight
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      for (let x = 0; x <= W; x += 2) {
+        const y = yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp;
+        ctx.lineTo(x, y);
       }
-    });
+      ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.55})`;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    }
 
-    whitecapAnimId = requestAnimationFrame(frame);
+    phase += phaseSpeedX || 0.04;
+    waveAnimId = requestAnimationFrame(frame);
   }
   frame();
 }
@@ -709,8 +650,7 @@ function renderDay(dayIdx) {
 
   initLeafletMap();
   startWindAnimation(windSpeedKmh, windDirDeg);
-  initWaveMap();
-  startWhitecapAnimation(waveHeightM, waveDirDeg);
+  startWaveAnimation(waveHeightM,  waveDirDeg);
 }
 
 // ─── Build the forecast calendar in the header ───────────────────────────────
