@@ -42,16 +42,26 @@
   <!-- ─── Data matrix ───────────────────────────────────────────────────────── -->
   <main class="matrix">
 
-    <!-- Sunrise / Sunset -->
-    <div class="sun-row" id="sunRow">
-      <span class="sun-item">
-        <span class="sun-icon">🌅</span>
-        <span id="sunriseVal">--:--</span>
-      </span>
-      <span class="sun-item">
-        <span class="sun-icon">🌇</span>
-        <span id="sunsetVal">--:--</span>
-      </span>
+    <!-- Sunrise / Sunset — 2 tiles, same height as data rows -->
+    <div class="sun-row">
+      <!-- Sunrise tile (right in RTL = first DOM child) -->
+      <div class="mx-cell sun-tile sunrise-tile">
+        <div class="sun-disc sunrise-disc"></div>
+        <div class="sun-horizon"></div>
+        <div class="sun-info">
+          <div class="sun-label">זריחה</div>
+          <div class="sun-time" id="sunriseVal">--:--</div>
+        </div>
+      </div>
+      <!-- Sunset tile (left in RTL = second DOM child) -->
+      <div class="mx-cell sun-tile sunset-tile">
+        <div class="sun-disc sunset-disc"></div>
+        <div class="sun-horizon"></div>
+        <div class="sun-info">
+          <div class="sun-label">שקיעה</div>
+          <div class="sun-time" id="sunsetVal">--:--</div>
+        </div>
+      </div>
     </div>
 
     <!-- Column headers: DOM order = [morning, noon, evening]; RTL renders right→left -->
