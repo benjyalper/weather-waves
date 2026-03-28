@@ -153,52 +153,75 @@ header {
 }
 
 .wind-section-title {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: #0D47A1;
-  background: rgba(255,255,255,0.92);
-  padding: 4px 12px;
-  border-radius: 20px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.15);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.wind-badge {
-  background: rgba(255,255,255,0.92);
-  color: #0D47A1;
-  font-size: 0.82rem;
+/* Three side-by-side wind panels */
+.wind-slots {
+  display: flex;
+  gap: 10px;
+}
+
+.wind-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.wind-slot-label {
+  font-size: 0.75rem;
   font-weight: 800;
-  padding: 4px 12px;
-  border-radius: 20px;
+  color: #0D47A1;
   letter-spacing: 0.5px;
-  direction: ltr;
-  unicode-bidi: isolate;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
 
-.wind-map-wrapper {
+.wind-slot-map {
   position: relative;
   width: 100%;
-  height: 130px;
-  border-radius: 18px;
+  height: 120px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22);
 }
 
-/* Leaflet map fills the wrapper */
-#windMap {
+/* Leaflet map fills the slot */
+.wind-slot-map > div {
   position: absolute;
   inset: 0;
   z-index: 1;
 }
 
-/* Wind particle canvas sits on top, non-interactive */
-#windCanvas {
+/* Wind particle canvas on top, non-interactive */
+.wind-slot-map > canvas {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
+}
+
+.wind-slot-badge {
+  background: rgba(255,255,255,0.92);
+  color: #0D47A1;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.4px;
+  direction: ltr;
+  unicode-bidi: isolate;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  white-space: nowrap;
+}
+
+/* Highlight active time slot (today's current period) */
+.wind-slot.active .wind-slot-map {
+  box-shadow: 0 4px 18px rgba(2, 136, 209, 0.45);
+  outline: 2px solid #0288D1;
 }
 
 /* City name tooltip on the wind map */

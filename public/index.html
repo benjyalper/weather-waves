@@ -40,13 +40,35 @@
   <section class="wind-section">
     <div class="wind-section-header">
       <span class="wind-section-title">💨 רוח</span>
-      <span class="wind-badge" id="windBadge">--</span>
     </div>
-    <div class="wind-map-wrapper">
-      <!-- Leaflet map as background -->
-      <div id="windMap"></div>
-      <!-- Canvas for animated wind particles (on top of map) -->
-      <canvas id="windCanvas"></canvas>
+    <div class="wind-slots">
+      <!-- Morning -->
+      <div class="wind-slot">
+        <span class="wind-slot-label">בוקר</span>
+        <div class="wind-slot-map">
+          <div id="windMap0"></div>
+          <canvas id="windCanvas0"></canvas>
+        </div>
+        <span class="wind-slot-badge" id="windBadge0">--</span>
+      </div>
+      <!-- Noon -->
+      <div class="wind-slot">
+        <span class="wind-slot-label">צהריים</span>
+        <div class="wind-slot-map">
+          <div id="windMap1"></div>
+          <canvas id="windCanvas1"></canvas>
+        </div>
+        <span class="wind-slot-badge" id="windBadge1">--</span>
+      </div>
+      <!-- Evening -->
+      <div class="wind-slot">
+        <span class="wind-slot-label">ערב</span>
+        <div class="wind-slot-map">
+          <div id="windMap2"></div>
+          <canvas id="windCanvas2"></canvas>
+        </div>
+        <span class="wind-slot-badge" id="windBadge2">--</span>
+      </div>
     </div>
   </section>
 

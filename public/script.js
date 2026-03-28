@@ -328,9 +328,9 @@ const WAVE_ICONS = {
 
 // ─── Wind & Wave Animation ────────────────────────────────────────────────────
 
-let leafletMap  = null;   // Leaflet map instance (created once)
-let windAnimId  = null;   // requestAnimationFrame handle for wind
-let waveAnimId  = null;   // requestAnimationFrame handle for wave canvas
+let leafletMaps  = [null, null, null];  // one Leaflet map per time slot
+let windAnimIds  = [null, null, null];  // rAF handles per slot
+let waveAnimId   = null;               // requestAnimationFrame handle for wave canvas
 
 // Wind speed (km/h) → particle colour
 // Darker tones so particles are visible on both sea and land tiles
@@ -347,37 +347,35 @@ function windDirHebrew(deg) {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-// Initialise Leaflet map once (dark CartoDB tiles, no API key needed)
-function initLeafletMap() {
-  if (leafletMap) return;
-
-  leafletMap = L.map('windMap', {
-    center: [LAT, LON],
-    zoom: 13,
-    zoomControl: false,
-    dragging: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
-    keyboard: false,
-    attributionControl: true
+// Initialise the 3 Leaflet maps (one per time slot) — called once
+function initLeafletMaps() {
+  [0, 1, 2].forEach(i => {
+    if (leafletMaps[i]) return;
+    leafletMaps[i] = L.map(`windMap${i}`, {
+      center: [LAT, LON],
+      zoom: 13,
+      zoomControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      keyboard: false,
+      attributionControl: i === 2  // only show attribution on the last map
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(leafletMaps[i]);
   });
-
-  // Standard OpenStreetMap tiles — Hebrew + English labels, city shown on map
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  }).addTo(leafletMap);
-
-
 }
 
 // Animated wind-particle system on the canvas overlay
 // Uses clearRect each frame + trail history so the Leaflet map shows through
-function startWindAnimation(speedKmh, dirDeg) {
-  const canvas = document.getElementById('windCanvas');
+// idx = 0 (morning) | 1 (noon) | 2 (evening)
+function startWindAnimation(idx, speedKmh, dirDeg) {
+  const canvas = document.getElementById(`windCanvas${idx}`);
   if (!canvas) return;
 
-  if (windAnimId) { cancelAnimationFrame(windAnimId); windAnimId = null; }
+  if (windAnimIds[idx]) { cancelAnimationFrame(windAnimIds[idx]); windAnimIds[idx] = null; }
 
   const wrapper = canvas.parentElement;
   // getBoundingClientRect gives the true rendered size (offsetWidth can lag layout)
@@ -453,7 +451,7 @@ function startWindAnimation(speedKmh, dirDeg) {
       }
     });
 
-    windAnimId = requestAnimationFrame(frame);
+    windAnimIds[idx] = requestAnimationFrame(frame);
   }
   frame();
 }
@@ -621,33 +619,40 @@ function renderDay(dayIdx) {
     slot.innerHTML = `
       <span class="slot-label">${label}</span>
       <span class="slot-icon">🌊</span>
-      <span class="slot-value">${waveHeight != null ? waveHeight.toFixed(1) + ' m' : '--'}</span>
+      <span class="slot-value">${waveHeight != null ? waveHeight.toFixed(1) + " מ'" : '--'}</span>
       <span class="slot-sub">${waterTemp != null ? '🌡 ' + Math.round(waterTemp) + '°C' : '--'}</span>
     `;
     waveSlots.appendChild(slot);
   });
 
-  // ── Wind map + wave canvas animations ──
-  // Use the active time-slot hour (today) or noon (future days) as representative
-  const animHour = dayIdx === 0
-    ? TIME_SLOTS.find(s => s.key === getCurrentSlotKey()).hour
-    : 13;
-  const wIdx = findHourIndex(wHourly.time, dateStr, animHour);
-  const mIdx = findHourIndex(marineHourly.time, dateStr, animHour);
+  // ── Wind maps (one per time slot) ──
+  const activeSlotKeyWind = dayIdx === 0 ? getCurrentSlotKey() : null;
 
-  const windSpeedKmh = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]      ?? 0)   : 0;
-  const windDirDeg   = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx]  ?? 0)   : 0;
-  const waveDirDeg   = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
-  const waveHeightM  = mIdx !== -1 ? (marineHourly.wave_height?.[mIdx]    ?? 0.5) : 0.5;
+  initLeafletMaps();
 
-  document.getElementById('windBadge').textContent =
-    `${Math.round(windSpeedKmh)} km/h · ${windDirHebrew(windDirDeg)}`;
+  // Highlight active slot panel
+  document.querySelectorAll('.wind-slot').forEach((el, i) => {
+    const slotKey = TIME_SLOTS[i].key;
+    el.classList.toggle('active', slotKey === activeSlotKeyWind);
+  });
+
+  TIME_SLOTS.forEach(({ hour }, i) => {
+    const wIdx = findHourIndex(wHourly.time, dateStr, hour);
+    const windSpeedKmh = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]     ?? 0) : 0;
+    const windDirDeg   = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
+    document.getElementById(`windBadge${i}`).textContent =
+      `${Math.round(windSpeedKmh)} קמ"ש · ${windDirHebrew(windDirDeg)}`;
+    startWindAnimation(i, windSpeedKmh, windDirDeg);
+  });
+
+  // ── Wave canvas animation (use noon hour as representative) ──
+  const animHour    = dayIdx === 0 ? TIME_SLOTS.find(s => s.key === getCurrentSlotKey()).hour : 13;
+  const mIdx        = findHourIndex(marineHourly.time, dateStr, animHour);
+  const waveDirDeg  = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
+  const waveHeightM = mIdx !== -1 ? (marineHourly.wave_height?.[mIdx]    ?? 0.5) : 0.5;
 
   renderSunTimes(gWeatherData.daily, dayIdx);
-
-  initLeafletMap();
-  startWindAnimation(windSpeedKmh, windDirDeg);
-  startWaveAnimation(waveHeightM,  waveDirDeg);
+  startWaveAnimation(waveHeightM, waveDirDeg);
 }
 
 // ─── Render sunrise / sunset for the selected day ────────────────────────────
