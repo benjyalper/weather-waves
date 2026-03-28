@@ -253,10 +253,10 @@ header {
 
 /* Sunrise / Sunset photo backgrounds — must come after .mx-cell to win */
 .sunrise-tile {
-  background: url('sunrise.jpg') 30% 55% / cover no-repeat;
+  background: url('sunrise.JPG') 30% 55% / cover no-repeat;
 }
 .sunset-tile {
-  background: url('sunset.jpg') center 62% / cover no-repeat;
+  background: url('sunset.PNG') center 62% / cover no-repeat;
 }
 
 /* ─── Weather cell ───────────────────────────────────────────────────────────── */
