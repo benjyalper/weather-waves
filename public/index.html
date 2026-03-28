@@ -3,108 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather 'n' Waves</title>
-  <!-- PWA / home-screen icon -->
+  <title>איים בזרם נווה ים</title>
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Waves" />
-  <meta name="theme-color" content="#0288D1" />
+  <meta name="theme-color" content="#0D47A1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ─── Loading overlay (shown while fetching data) ─────────────────────── -->
+  <!-- Loading overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <p class="loading-text">טוען נתונים...</p>
   </div>
 
-  <!-- ─── Header: title + Hebrew week calendar ─────────────────────────────── -->
+  <!-- Header -->
   <header>
-    <h1 class="app-title">🌊 Weather 'n' Waves</h1>
-
-    <!-- Hebrew letter days: א=Sun ב=Mon ג=Tue ד=Wed ה=Thu ו=Fri ש=Sat -->
-    <div class="calendar" id="calendar" aria-label="ימי השבוע">
-      <!-- Filled by script.js -->
-    </div>
-
-    <p class="city-label" id="cityLabel"></p>
-    <!-- Shows which day is currently selected -->
-    <p class="viewing-label" id="viewingLabel"></p>
+    <h1 class="app-title">🌊 איים בזרם נווה ים</h1>
   </header>
 
-  <!-- ─── Wind Map Section ────────────────────────────────────────────────────── -->
-  <section class="wind-section">
-    <div class="wind-section-header">
-      <span class="wind-section-title">💨 רוח</span>
+  <!-- ─── Drum day picker: 3 days visible, center = selected ──────────────── -->
+  <div class="drum-wrapper" dir="ltr">
+    <div class="drum-track" id="drumTrack">
+      <!-- populated by buildDrum() in script.js -->
     </div>
-    <div class="wind-slots">
-      <!-- Morning -->
-      <div class="wind-slot">
-        <span class="wind-slot-label">בוקר</span>
-        <div class="wind-slot-map">
+    <div class="drum-fade drum-fade-left"></div>
+    <div class="drum-fade drum-fade-right"></div>
+    <div class="drum-ring"></div>
+  </div>
+
+  <!-- Error banner -->
+  <div class="error-banner" id="errorBanner" role="alert"></div>
+
+  <!-- ─── Data matrix ───────────────────────────────────────────────────────── -->
+  <main class="matrix">
+
+    <!-- Sunrise / Sunset -->
+    <div class="sun-row" id="sunRow">
+      <span class="sun-item">
+        <span class="sun-icon">🌅</span>
+        <span id="sunriseVal">--:--</span>
+      </span>
+      <span class="sun-item">
+        <span class="sun-icon">🌇</span>
+        <span id="sunsetVal">--:--</span>
+      </span>
+    </div>
+
+    <!-- Column headers: DOM order = [morning, noon, evening]; RTL renders right→left -->
+    <div class="col-header-row">
+      <div class="col-header">בוקר</div>
+      <div class="col-header">צהריים</div>
+      <div class="col-header">ערב</div>
+    </div>
+
+    <!-- Weather row -->
+    <div class="mx-row" id="weatherRow">
+      <div class="mx-cell wx-cell" id="wx0"></div>
+      <div class="mx-cell wx-cell" id="wx1"></div>
+      <div class="mx-cell wx-cell" id="wx2"></div>
+    </div>
+
+    <!-- Wave row -->
+    <div class="mx-row" id="waveRow">
+      <div class="mx-cell wv-cell" id="wv0">
+        <canvas class="wave-cvs" id="waveCanvas0"></canvas>
+        <div class="wv-val" id="waveVal0">--</div>
+      </div>
+      <div class="mx-cell wv-cell" id="wv1">
+        <canvas class="wave-cvs" id="waveCanvas1"></canvas>
+        <div class="wv-val" id="waveVal1">--</div>
+      </div>
+      <div class="mx-cell wv-cell" id="wv2">
+        <canvas class="wave-cvs" id="waveCanvas2"></canvas>
+        <div class="wv-val" id="waveVal2">--</div>
+      </div>
+    </div>
+
+    <!-- Wind row: Leaflet maps + particle animation -->
+    <div class="mx-row" id="windRow">
+      <div class="mx-cell wd-cell">
+        <div class="wd-map-wrap">
           <div id="windMap0"></div>
           <canvas id="windCanvas0"></canvas>
         </div>
-        <span class="wind-slot-badge" id="windBadge0">--</span>
+        <div class="wd-badge" id="windBadge0">--</div>
       </div>
-      <!-- Noon -->
-      <div class="wind-slot">
-        <span class="wind-slot-label">צהריים</span>
-        <div class="wind-slot-map">
+      <div class="mx-cell wd-cell">
+        <div class="wd-map-wrap">
           <div id="windMap1"></div>
           <canvas id="windCanvas1"></canvas>
         </div>
-        <span class="wind-slot-badge" id="windBadge1">--</span>
+        <div class="wd-badge" id="windBadge1">--</div>
       </div>
-      <!-- Evening -->
-      <div class="wind-slot">
-        <span class="wind-slot-label">ערב</span>
-        <div class="wind-slot-map">
+      <div class="mx-cell wd-cell">
+        <div class="wd-map-wrap">
           <div id="windMap2"></div>
           <canvas id="windCanvas2"></canvas>
         </div>
-        <span class="wind-slot-badge" id="windBadge2">--</span>
+        <div class="wd-badge" id="windBadge2">--</div>
       </div>
     </div>
-  </section>
-
-  <!-- ─── Main content ──────────────────────────────────────────────────────── -->
-  <main>
-
-    <!-- Error banner (hidden by default) -->
-    <div class="error-banner" id="errorBanner" role="alert"></div>
-
-    <!-- Two equal cards -->
-    <div class="cards">
-
-      <!-- Weather card -->
-      <div class="card card-weather">
-        <div class="card-title">מזג אוויר</div>
-        <div class="time-slots" id="weatherSlots">
-          <!-- 3 slots (morning/noon/evening) injected by script.js -->
-        </div>
-        <div class="sun-times" id="sunTimes"></div>
-      </div>
-
-      <!-- Waves card -->
-      <div class="card card-waves">
-        <div class="card-title">גלים</div>
-        <div class="time-slots" id="waveSlots">
-          <!-- 3 slots (morning/noon/evening) injected by script.js -->
-        </div>
-        <!-- Animated wave canvas (height/direction driven) -->
-        <canvas id="waveCanvas" class="wave-canvas"></canvas>
-      </div>
-
-    </div><!-- /cards -->
 
   </main>
 
-  <!-- ─── Footer: last updated ─────────────────────────────────────────────── -->
   <footer>
     <span id="lastUpdated">טרם עודכן</span>
     &nbsp;·&nbsp;
