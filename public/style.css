@@ -195,16 +195,6 @@ header {
   overflow: hidden;
 }
 
-/* Sunrise — photo background */
-.sunrise-tile {
-  background: url('sunrise.jpg') center center / cover no-repeat;
-}
-
-/* Sunset — photo background */
-.sunset-tile {
-  background: url('sunset.jpg') center center / cover no-repeat;
-}
-
 /* Sun disc — sits in the upper-centre of the tile, well clear of the text */
 .sun-disc {
   position: absolute;
@@ -294,6 +284,14 @@ header {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+}
+
+/* Sunrise / Sunset photo backgrounds — must come after .mx-cell to win */
+.sunrise-tile {
+  background: url('sunrise.jpg') center center / cover no-repeat;
+}
+.sunset-tile {
+  background: url('sunset.jpg') center center / cover no-repeat;
 }
 
 /* ─── Weather cell ───────────────────────────────────────────────────────────── */
