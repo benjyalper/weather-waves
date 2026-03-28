@@ -475,9 +475,10 @@ function buildDrum(daily) {
   track.appendChild(s2);
 
   // Scroll to today without animation on initial build
+  // RTL: scrollLeft = 0 means today (rightmost) is centred; future days are negative
   requestAnimationFrame(() => {
     const itemW = track.clientWidth / 3;
-    track.scrollLeft = gSelectedDay * itemW;
+    track.scrollLeft = -gSelectedDay * itemW;
     updateDrumActive(gSelectedDay);
   });
 
@@ -491,7 +492,8 @@ function onDrumScroll() {
   drumScrollTimer = setTimeout(() => {
     const track = document.getElementById('drumTrack');
     const itemW = track.clientWidth / 3;
-    const idx   = Math.max(0, Math.min(6, Math.round(track.scrollLeft / itemW)));
+    // RTL: scrollLeft = 0 at rightmost (today), goes negative toward future days
+    const idx = Math.max(0, Math.min(6, Math.round(-track.scrollLeft / itemW)));
     if (idx !== gSelectedDay) {
       gSelectedDay = idx;
       updateDrumActive(idx);
@@ -503,7 +505,8 @@ function onDrumScroll() {
 function scrollDrumTo(idx) {
   const track = document.getElementById('drumTrack');
   const itemW = track.clientWidth / 3;
-  track.scrollTo({ left: idx * itemW, behavior:'smooth' });
+  // RTL: negative scrollLeft to move left (toward future days)
+  track.scrollTo({ left: -idx * itemW, behavior:'smooth' });
 }
 
 function updateDrumActive(idx) {

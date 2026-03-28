@@ -70,7 +70,8 @@ header {
   padding-bottom: 10px;
 }
 
-/* The scrollable track — forced LTR so day 0 (today) is always the leftmost snap point */
+/* RTL track: day 0 (today) is rightmost; future days extend to the left.
+   scrollLeft = 0 → rightmost → today centred. scrollLeft goes negative for future days. */
 .drum-track {
   display: flex;
   overflow-x: scroll;
@@ -78,7 +79,7 @@ header {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  direction: ltr;          /* LTR scroll so scrollLeft=0 ≡ day 0 centred */
+  direction: rtl;          /* RTL: today on right, future days grow leftward */
   padding: 10px 0 8px;
 }
 .drum-track::-webkit-scrollbar { display: none; }
