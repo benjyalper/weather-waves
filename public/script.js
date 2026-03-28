@@ -326,39 +326,37 @@ const WAVE_ICONS = {
   'high':   iconWaveHigh
 };
 
-// ─── Find the hourly index for noon (12:00) on a given date string ────────────
-// Used to pick a representative wave reading for a forecast day
-function findNoonIndex(timeArray, dateStr) {
-  const noonStr = dateStr + 'T12:00';
-  let idx = timeArray.findIndex(t => t.startsWith(noonStr));
-  if (idx !== -1) return idx;
-  // Fallback: first entry for that day
-  return timeArray.findIndex(t => t.startsWith(dateStr));
+// ─── Time slots definition ────────────────────────────────────────────────────
+// Three representative hours shown inside each card
+const TIME_SLOTS = [
+  { key: 'morning', label: 'בוקר',    hour: 8  },
+  { key: 'noon',    label: 'צהריים',  hour: 13 },
+  { key: 'evening', label: 'ערב',     hour: 19 },
+];
+
+// Returns 'morning' | 'noon' | 'evening' based on the current local hour
+function getCurrentSlotKey() {
+  const h = new Date().getHours();
+  if (h < 11)  return 'morning';
+  if (h < 17)  return 'noon';
+  return 'evening';
 }
 
-// ─── Find the index of the current hour in an hourly time array ───────────────
-// Marine API returns arrays like ["2024-01-01T00:00", "2024-01-01T01:00", ...]
-function findCurrentHourIndex(timeArray) {
-  const nowPrefix = new Date().toISOString().slice(0, 13); // "2024-01-15T14"
-  let idx = timeArray.findIndex(t => t.startsWith(nowPrefix));
+// Find index of a specific hour on a specific date in an hourly time array
+// timeArray entries look like "2024-01-15T08:00"
+function findHourIndex(timeArray, dateStr, hour) {
+  const target = `${dateStr}T${String(hour).padStart(2, '0')}:00`;
+  const idx = timeArray.findIndex(t => t === target);
   if (idx !== -1) return idx;
-
-  // Fallback: find the closest time to now
-  const nowMs = Date.now();
-  let bestIdx = 0;
-  let minDiff = Infinity;
-  timeArray.forEach((t, i) => {
-    const diff = Math.abs(new Date(t).getTime() - nowMs);
-    if (diff < minDiff) { minDiff = diff; bestIdx = i; }
-  });
-  return bestIdx;
+  // Fallback: nearest entry for that day
+  return timeArray.findIndex(t => t.startsWith(dateStr));
 }
 
 // ─── Hebrew full day names (for the "viewing" label) ─────────────────────────
 const HEBREW_DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 // ─── Render both cards for a specific forecast day index ─────────────────────
-// dayIdx = 0 → today (uses current readings), dayIdx > 0 → future days (noon)
+// dayIdx = 0 → today, dayIdx > 0 → future days
 function renderDay(dayIdx) {
   gSelectedDay = dayIdx;
 
@@ -377,45 +375,58 @@ function renderDay(dayIdx) {
     viewingEl.textContent = `יום ${HEBREW_DAY_NAMES[dayOfWeek]}`;
   }
 
-  // ── Weather card ──
-  const daily = gWeatherData?.daily;
-  if (daily) {
-    const code     = daily.weathercode[dayIdx];
-    const category = getWeatherCategory(code);
-    const temp     = dayIdx === 0
-      ? Math.round(gWeatherData.current.temperature_2m)   // live current temp
-      : Math.round(daily.temperature_2m_max[dayIdx]);      // forecast max temp
+  const daily        = gWeatherData?.daily;
+  const wHourly      = gWeatherData?.hourly;   // weather hourly (temp + code)
+  const marineHourly = gMarineData?.hourly;    // marine hourly (waves + sea temp)
+  if (!daily || !wHourly || !marineHourly) return;
 
-    document.getElementById('weatherIcon').innerHTML     = WEATHER_ICONS[category]();
-    document.getElementById('weatherTemp').textContent   = `${temp}°C`;
-    document.getElementById('weatherLabel').textContent  = WEATHER_LABELS[category];
-  }
+  const dateStr       = daily.time[dayIdx];
+  const activeSlotKey = dayIdx === 0 ? getCurrentSlotKey() : null; // highlight for today
 
-  // ── Waves card ──
-  const hourly = gMarineData?.hourly;
-  if (hourly && daily) {
-    const dateStr    = daily.time[dayIdx];
-    const idx        = dayIdx === 0
-      ? findCurrentHourIndex(hourly.time)   // live current hour
-      : findNoonIndex(hourly.time, dateStr); // noon reading for that day
-    const waveHeight = idx !== -1 ? hourly.wave_height?.[idx]              : null;
-    const waterTemp  = idx !== -1 ? hourly.sea_surface_temperature?.[idx]  : null;
+  // ── Build weather slots ──
+  const weatherSlots = document.getElementById('weatherSlots');
+  weatherSlots.innerHTML = '';
 
-    if (waveHeight != null) {
-      const cat = getWaveCategory(waveHeight);
-      document.getElementById('waveIcon').innerHTML    = WAVE_ICONS[cat]();
-      document.getElementById('waveHeight').textContent = `${waveHeight.toFixed(1)} m`;
-      document.getElementById('waveLabel').textContent  = WAVE_LABELS[cat];
-    } else {
-      document.getElementById('waveHeight').textContent = '--';
-      document.getElementById('waveLabel').textContent  = '--';
-      document.getElementById('waveIcon').innerHTML     = iconWaveFlat();
-    }
+  TIME_SLOTS.forEach(({ key, label, hour }) => {
+    const idx      = findHourIndex(wHourly.time, dateStr, hour);
+    const temp     = idx !== -1 ? Math.round(wHourly.temperature_2m[idx]) : null;
+    const code     = idx !== -1 ? wHourly.weathercode[idx]                : null;
+    const category = code != null ? getWeatherCategory(code) : 'cloudy';
+    const emoji    = WEATHER_EMOJI[category];
+    const isActive = key === activeSlotKey;
 
-    document.getElementById('waterTemp').textContent = waterTemp != null
-      ? `🌡 טמפרטורת המים: ${Math.round(waterTemp)}°C`
-      : '🌡 טמפרטורת המים: --';
-  }
+    const slot = document.createElement('div');
+    slot.className = 'time-slot' + (isActive ? ' active' : '');
+    slot.innerHTML = `
+      <span class="slot-label">${label}</span>
+      <span class="slot-icon">${emoji}</span>
+      <span class="slot-value">${temp != null ? temp + '°' : '--'}</span>
+      <span class="slot-sub">${temp != null ? WEATHER_LABELS[category] : ''}</span>
+    `;
+    weatherSlots.appendChild(slot);
+  });
+
+  // ── Build wave slots ──
+  const waveSlots = document.getElementById('waveSlots');
+  waveSlots.innerHTML = '';
+
+  TIME_SLOTS.forEach(({ key, label, hour }) => {
+    const idx        = findHourIndex(marineHourly.time, dateStr, hour);
+    const waveHeight = idx !== -1 ? marineHourly.wave_height?.[idx]             : null;
+    const waterTemp  = idx !== -1 ? marineHourly.sea_surface_temperature?.[idx] : null;
+    const category   = waveHeight != null ? getWaveCategory(waveHeight) : 'flat';
+    const isActive   = key === activeSlotKey;
+
+    const slot = document.createElement('div');
+    slot.className = 'time-slot wave-slot' + (isActive ? ' active' : '');
+    slot.innerHTML = `
+      <span class="slot-label">${label}</span>
+      <span class="slot-icon">🌊</span>
+      <span class="slot-value">${waveHeight != null ? waveHeight.toFixed(1) + ' m' : '--'}</span>
+      <span class="slot-sub">${waterTemp != null ? '🌡 ' + Math.round(waterTemp) + '°C' : '--'}</span>
+    `;
+    waveSlots.appendChild(slot);
+  });
 }
 
 // ─── Build the forecast calendar in the header ───────────────────────────────
