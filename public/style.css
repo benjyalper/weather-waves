@@ -204,13 +204,64 @@ header {
   opacity: 0.5;
 }
 
-/* ─── Wave Canvas (inside waves card) ────────────────────────────────────────── */
-.wave-canvas {
-  width: 100%;
-  height: 80px;
-  border-radius: 10px;
-  margin-top: 12px;
-  display: block;
+/* ─── Waves card: map background with whitecap overlay ──────────────────────── */
+
+/* Card becomes a positioned container so the map fills it */
+.card-waves {
+  position: relative;
+  overflow: hidden;
+  padding: 0;          /* map fills edge-to-edge; content has its own padding */
+  min-height: 210px;
+}
+
+/* Map + canvas together fill the entire card */
+.wave-map-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+#waveMap {
+  position: absolute;
+  inset: 0;
+}
+
+/* Whitecap particle canvas on top of the map */
+#whitecapCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Title and slots float above the map */
+.card-waves .card-title {
+  position: relative;
+  z-index: 2;
+  margin: 16px 16px 10px;
+  align-self: flex-start;
+}
+
+/* Frosted-glass panel so stats are readable over the map */
+.card-waves .time-slots {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(4px);
+  border-radius: 14px;
+  margin: 0 10px 12px;
+  padding: 8px 6px;
+}
+
+/* Slots inside the wave card don't need their own background */
+.card-waves .time-slot {
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-waves .time-slot.active {
+  background: rgba(2, 136, 209, 0.12);
+  border-color: rgba(2, 136, 209, 0.35);
 }
 
 /* ─── Main ───────────────────────────────────────────────────────────────────── */

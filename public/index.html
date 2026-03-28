@@ -67,14 +67,18 @@
         </div>
       </div>
 
-      <!-- Waves card -->
+      <!-- Waves card — map as background, whitecap animation overlay -->
       <div class="card card-waves">
+        <!-- Map + whitecap canvas fills the card background -->
+        <div class="wave-map-wrapper">
+          <div id="waveMap"></div>
+          <canvas id="whitecapCanvas"></canvas>
+        </div>
+        <!-- Content floats on top of the map -->
         <div class="card-title">גלים</div>
         <div class="time-slots" id="waveSlots">
-          <!-- 3 slots (morning/noon/evening) injected by script.js -->
+          <!-- 3 slots injected by script.js -->
         </div>
-        <!-- Animated wave canvas (height/direction driven) -->
-        <canvas id="waveCanvas" class="wave-canvas"></canvas>
       </div>
 
     </div><!-- /cards -->
