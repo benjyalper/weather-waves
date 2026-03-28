@@ -352,7 +352,7 @@ function initLeafletMap() {
 
   leafletMap = L.map('windMap', {
     center: [LAT, LON],
-    zoom: 9,
+    zoom: 10,
     zoomControl: false,
     dragging: false,
     scrollWheelZoom: false,
@@ -361,8 +361,8 @@ function initLeafletMap() {
     attributionControl: true
   });
 
-  // CartoDB dark basemap — free, no API key
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // CartoDB Voyager — free, no API key, shows sea (blue) and land (beige/green)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19

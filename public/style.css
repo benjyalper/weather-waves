@@ -162,21 +162,22 @@ header {
 }
 
 .wind-badge {
-  background: rgba(255,255,255,0.18);
-  color: white;
+  background: rgba(255,255,255,0.92);
+  color: #0D47A1;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   padding: 4px 12px;
   border-radius: 20px;
   letter-spacing: 0.5px;
   direction: ltr;
   unicode-bidi: isolate;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
 
 .wind-map-wrapper {
   position: relative;
   width: 100%;
-  height: 260px;
+  height: 130px;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 6px 24px rgba(0,0,0,0.25);
