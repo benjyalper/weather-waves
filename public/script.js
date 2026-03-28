@@ -353,7 +353,7 @@ function initLeafletMap() {
 
   leafletMap = L.map('windMap', {
     center: [LAT, LON],
-    zoom: 10,
+    zoom: 13,
     zoomControl: false,
     dragging: false,
     scrollWheelZoom: false,
@@ -362,22 +362,17 @@ function initLeafletMap() {
     attributionControl: true
   });
 
-  // CartoDB Voyager — free, no API key, shows sea (blue) and land (beige/green)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CARTO</a>',
-    subdomains: 'abcd',
+  // Standard OpenStreetMap tiles — Hebrew + English labels, city shown on map
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(leafletMap);
 
-  // Gold dot with permanent city-name tooltip
+  // Small gold dot — city name appears on the OSM tile labels
   L.circleMarker([LAT, LON], {
     radius: 6, fillColor: '#FFD600',
     color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(leafletMap)
-    .bindTooltip(CITY, {
-      permanent: true, direction: 'right',
-      className: 'city-tooltip', offset: [8, 0]
-    }).openTooltip();
+  }).addTo(leafletMap);
 }
 
 // Animated wind-particle system on the canvas overlay
