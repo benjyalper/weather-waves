@@ -417,10 +417,12 @@ header {
 }
 
 .sun-label {
-  font-size: var(--font-xs);
-  font-weight: var(--w-mid);
-  letter-spacing: 0.8px;
-  opacity: 0.88;
+  font-size: var(--font-sm);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.5px;
+  color: var(--text-dark);
+  text-shadow: none;
+  opacity: 0.8;
   margin-bottom: 2px;
 }
 
