@@ -65,7 +65,7 @@ body {
 header {
   background: linear-gradient(135deg, #0D47A1 0%, #0288D1 60%, #00ACC1 100%);
   color: white;
-  padding: 4px 20px 0;
+  padding: 8px 20px 8px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(13,71,161,0.35);
   display: flex;
@@ -93,7 +93,7 @@ header {
   letter-spacing: 1.5px;
   line-height: 1;
   margin-bottom: 0;
-  padding-bottom: 4px;
+  padding-bottom: 0;
 }
 
 /* ─── Drum day picker ────────────────────────────────────────────────────────── */
