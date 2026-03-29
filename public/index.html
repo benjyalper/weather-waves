@@ -133,7 +133,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 
-  <!-- Remove white background from logo JPEG, then crop to visible pixels -->
+  <!-- Remove white background from logo, then crop to visible pixels -->
   <script>
     (function () {
       const canvas = document.getElementById('logoCanvas');
@@ -174,7 +174,7 @@
         canvas.height = cropH;
         ctx.putImageData(cropped, 0, 0);
       };
-      img.src = 'logo.jpeg?v=2';
+      img.src = 'logo.png?v=3';
     })();
   </script>
 </body>
