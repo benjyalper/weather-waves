@@ -430,6 +430,8 @@ header {
   font-size: var(--font-sm);
   font-weight: var(--w-heavy);
   letter-spacing: 0.8px;
+  color: var(--text-dark);
+  text-shadow: none;
   direction: ltr;
   unicode-bidi: isolate;
 }
