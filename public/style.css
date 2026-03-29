@@ -261,25 +261,24 @@ header {
 .wx-cell {
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 0 8px;
 }
 
-/* Lottie fills the whole cell as animated background */
+/* Lottie zoomed in to fill tile edge-to-edge with animation prominent */
 .wx-lottie {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   display: block;
 }
 
-/* Temperature pill overlaid at the bottom */
+/* Temperature pill — top-centre, matching wave/wind pill style */
 .wx-temp {
-  position: relative;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
@@ -288,8 +287,8 @@ header {
   direction: ltr;
   unicode-bidi: isolate;
   line-height: 1;
-  padding: 2px 10px;
-  background: rgba(255,255,255,0.75);
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.78);
   border-radius: 20px;
   backdrop-filter: blur(3px);
   box-shadow: 0 1px 6px rgba(0,0,0,0.10);
