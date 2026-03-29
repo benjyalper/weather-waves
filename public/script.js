@@ -441,10 +441,22 @@ function buildDrum(daily) {
   const track    = document.getElementById('drumTrack');
   track.innerHTML = '';
 
-  // Leading spacer so day 0 can scroll to centre
+  // Leading spacer so the first real item can scroll to centre
   const s1 = document.createElement('div');
   s1.className = 'drum-spacer';
   track.appendChild(s1);
+
+  // ── Yesterday (visual only, not selectable) ──────────────────────────────
+  const yd = new Date(); yd.setDate(yd.getDate() - 1);
+  const ydItem = document.createElement('div');
+  ydItem.className = 'drum-item drum-yesterday';
+  ydItem.dataset.idx = '-1';
+  ydItem.innerHTML = `
+    <div class="drum-letter">${HEBREW_DAYS[yd.getDay()]}</div>
+    <div class="drum-icon">—</div>
+    <div class="drum-temp">—</div>
+  `;
+  track.appendChild(ydItem);
 
   const todayStr = new Date().toISOString().slice(0,10);
 
@@ -458,8 +470,8 @@ function buildDrum(daily) {
     const maxT    = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
 
     const item = document.createElement('div');
-    item.className = 'drum-item' + (isToday ? ' today' : '') + (i === gSelectedDay ? ' active' : '');
-    item.dataset.idx = i;
+    item.className = 'drum-item' + (isToday ? ' today' : '');
+    item.dataset.idx = String(i);
     item.innerHTML = `
       <div class="drum-letter">${letter}</div>
       <div class="drum-icon">${emoji}</div>
@@ -474,11 +486,10 @@ function buildDrum(daily) {
   s2.className = 'drum-spacer';
   track.appendChild(s2);
 
-  // Scroll to today without animation on initial build
-  // RTL: scrollLeft = 0 means today (rightmost) is centred; future days are negative
+  // Scroll to selected day — +1 offset to skip past yesterday
   requestAnimationFrame(() => {
     const itemW = track.clientWidth / 3;
-    track.scrollLeft = -gSelectedDay * itemW;
+    track.scrollLeft = -(gSelectedDay + 1) * itemW;
     updateDrumActive(gSelectedDay);
   });
 
@@ -492,8 +503,8 @@ function onDrumScroll() {
   drumScrollTimer = setTimeout(() => {
     const track = document.getElementById('drumTrack');
     const itemW = track.clientWidth / 3;
-    // RTL: scrollLeft = 0 at rightmost (today), goes negative toward future days
-    const idx = Math.max(0, Math.min(6, Math.round(-track.scrollLeft / itemW)));
+    // -1 to subtract the yesterday slot at position 0
+    const idx = Math.max(0, Math.min(6, Math.round(-track.scrollLeft / itemW) - 1));
     if (idx !== gSelectedDay) {
       gSelectedDay = idx;
       updateDrumActive(idx);
@@ -505,13 +516,26 @@ function onDrumScroll() {
 function scrollDrumTo(idx) {
   const track = document.getElementById('drumTrack');
   const itemW = track.clientWidth / 3;
-  // RTL: negative scrollLeft to move left (toward future days)
-  track.scrollTo({ left: -idx * itemW, behavior:'smooth' });
+  // +1 to skip past the yesterday slot
+  track.scrollTo({ left: -(idx + 1) * itemW, behavior:'smooth' });
 }
 
+// 3-D ring illusion: distance from centre drives scale, opacity and rotateY
 function updateDrumActive(idx) {
-  document.querySelectorAll('.drum-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
+  const RING = [
+    { scale: 1.06, opacity: 1.00, ry:  0  },  // dist 0 — centre / closest
+    { scale: 0.84, opacity: 0.62, ry: 34  },  // dist 1
+    { scale: 0.66, opacity: 0.36, ry: 58  },  // dist 2
+    { scale: 0.52, opacity: 0.18, ry: 72  },  // dist 3+
+  ];
+  document.querySelectorAll('.drum-item').forEach((el) => {
+    const elIdx = parseInt(el.dataset.idx);
+    const dist  = Math.abs(elIdx - idx);
+    const r     = RING[Math.min(dist, RING.length - 1)];
+    const sign  = elIdx >= idx ? -1 : 1;   // tilt direction
+    el.classList.toggle('active', elIdx === idx);
+    el.style.transform = `perspective(480px) rotateY(${sign * r.ry}deg) scale(${r.scale})`;
+    el.style.opacity   = String(r.opacity);
   });
 }
 

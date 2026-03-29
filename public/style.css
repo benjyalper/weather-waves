@@ -113,16 +113,20 @@ header {
   padding: 8px 4px;
   border-radius: 12px;
   cursor: pointer;
-  color: rgba(255,255,255,0.45);
-  transform: scale(0.82);
-  transition: color 0.25s, transform 0.25s;
+  color: rgba(255,255,255,0.5);
+  transition: color 0.3s, transform 0.35s ease, opacity 0.35s ease;
   direction: rtl;
   user-select: none;
+  transform-origin: center center;
 }
 
-.drum-item.active {
-  color: #fff;
-  transform: scale(1.0);
+.drum-item.active { color: #fff; }
+
+/* Yesterday — dimmed, not interactive */
+.drum-item.drum-yesterday {
+  cursor: default;
+  pointer-events: none;
+  color: rgba(255,255,255,0.3);
 }
 
 .drum-item.today .drum-letter::after {
