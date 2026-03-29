@@ -252,6 +252,16 @@ const WEATHER_ICONS = {
   'sunny': iconSunny, 'partly-cloudy': iconPartlyCloudy,
   'cloudy': iconCloudy, 'rainy': iconRainy, 'stormy': iconStormy
 };
+
+// ─── Lottie weather animation URLs (Meteocons by Bas Milius, MIT) ─────────────
+const LOTTIE_BASE = 'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/lottie/';
+const LOTTIE_WEATHER = {
+  'sunny':         LOTTIE_BASE + 'clear-day.json',
+  'partly-cloudy': LOTTIE_BASE + 'partly-cloudy-day.json',
+  'cloudy':        LOTTIE_BASE + 'overcast-day.json',
+  'rainy':         LOTTIE_BASE + 'rain.json',
+  'stormy':        LOTTIE_BASE + 'thunderstorms-rain.json'
+};
 const WAVE_ICONS = {
   'flat': iconWaveFlat, 'small': iconWaveSmall,
   'medium': iconWaveMedium, 'high': iconWaveHigh
@@ -569,7 +579,10 @@ function renderDay(dayIdx) {
     const wxCell = document.getElementById(`wx${i}`);
     wxCell.className = `mx-cell wx-cell wx-${wxCat}`;
     wxCell.innerHTML = `
-      <div class="wx-icon">${(WEATHER_ICONS[wxCat] || iconCloudy)()}</div>
+      <lottie-player class="wx-lottie"
+        src="${LOTTIE_WEATHER[wxCat] || LOTTIE_WEATHER['cloudy']}"
+        background="transparent" speed="1" loop autoplay>
+      </lottie-player>
       <div class="wx-temp">${temp != null ? temp+'°' : '--'}</div>
     `;
 

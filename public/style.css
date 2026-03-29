@@ -269,31 +269,12 @@ header {
   line-height: 1;
 }
 
-/* ─── Weather animations ─────────────────────────────────────────────────────── */
-@keyframes wx-spin  { to { transform: rotate(360deg); } }
-@keyframes wx-float {
-  0%, 100% { transform: translateY(0);    }
-  50%      { transform: translateY(-5px); }
+/* ─── Lottie weather player ──────────────────────────────────────────────────── */
+.wx-lottie {
+  width: 64px;
+  height: 64px;
+  display: block;
 }
-@keyframes wx-sway {
-  0%, 100% { transform: rotate(-4deg); }
-  50%      { transform: rotate( 4deg); }
-}
-@keyframes wx-drip {
-  0%, 100% { transform: translateY(0);   }
-  30%      { transform: translateY(-4px);}
-  65%      { transform: translateY(3px); }
-}
-@keyframes wx-flash {
-  0%, 85%, 100% { filter: brightness(1);   }
-  88%, 94%      { filter: brightness(1.8); }
-}
-
-.wx-sunny         .wx-icon { animation: wx-spin  9s  linear        infinite; }
-.wx-partly-cloudy .wx-icon { animation: wx-float 3s  ease-in-out   infinite; }
-.wx-cloudy        .wx-icon { animation: wx-sway  4s  ease-in-out   infinite; }
-.wx-rainy         .wx-icon { animation: wx-drip  2s  ease-in-out   infinite; }
-.wx-stormy        .wx-icon { animation: wx-flash 2.5s ease-in-out  infinite; }
 
 /* ─── Wave cell ──────────────────────────────────────────────────────────────── */
 .wv-cell {
@@ -465,7 +446,7 @@ footer {
   .matrix       { max-width: 720px; padding: 8px 14px 14px; }
   .mx-row       { grid-auto-rows: 110px; }
   .sun-row      { grid-auto-rows: 100px; }
-  .wx-icon      { width: 54px; height: 54px; }
+  .wx-lottie    { width: 70px; height: 70px; }
   .logo-img     { width: 180px; }
 
   /* Drum aligned to tile content edges (720px - 2×14px padding = 692px) */
@@ -483,7 +464,7 @@ footer {
   .matrix      { padding: 8px 8px 16px; gap: 5px; }
   .mx-row      { grid-auto-rows: 100px; }
   .sun-row     { grid-auto-rows: 95px; }
-  .wx-icon     { width: 44px; height: 44px; }
+  .wx-lottie   { width: 52px; height: 52px; }
   .drum-letter { font-size: var(--font-sm); }
   .drum-icon   { font-size: var(--font-md); }
 }
