@@ -234,6 +234,8 @@ header {
   object-position: center 25%;
   border-radius: 50%;
   display: block;
+  transform: scale(1.5);
+  transform-origin: center center;
 }
 
 /* ─── Generic 3-column data row ─────────────────────────────────────────────── */
