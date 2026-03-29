@@ -403,18 +403,19 @@ footer {
 
 /* ─── Desktop (≥ 641px) ─────────────────────────────────────────────────────── */
 @media (min-width: 641px) {
-  .matrix       { max-width: 720px; padding: 12px 14px 24px; }
-  .mx-row       { grid-auto-rows: 140px; }
-  .sun-row      { grid-auto-rows: 130px; }
-  .wx-icon      { width: 60px; height: 60px; }
+  /* Matrix: 720px outer, 14px horizontal padding → 692px tile content */
+  .matrix       { max-width: 720px; padding: 8px 14px 14px; }
+  .mx-row       { grid-auto-rows: 110px; }
+  .sun-row      { grid-auto-rows: 100px; }
+  .wx-icon      { width: 54px; height: 54px; }
   .logo-img     { width: 180px; }
 
-  /* Constrain drum to same width as the matrix grid */
+  /* Drum aligned to tile content edges (720px - 2×14px padding = 692px) */
   .drum-wrapper {
-    max-width: 720px;
+    max-width: 692px;
     margin-left: auto;
     margin-right: auto;
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: var(--radius);
   }
 }
 
