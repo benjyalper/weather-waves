@@ -133,5 +133,37 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 
+  <!-- Trim transparent padding from logo PNG so header gaps are exact -->
+  <script>
+    (function () {
+      const logoImg = document.getElementById('logoImg');
+      function trimLogo() {
+        const c = document.createElement('canvas');
+        c.width  = logoImg.naturalWidth;
+        c.height = logoImg.naturalHeight;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(logoImg, 0, 0);
+        const d = ctx.getImageData(0, 0, c.width, c.height).data;
+        let minY = c.height, maxY = 0;
+        for (let y = 0; y < c.height; y++) {
+          for (let x = 0; x < c.width; x++) {
+            if (d[(y * c.width + x) * 4 + 3] > 10) {
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        // rendered height based on CSS width
+        const renderedH = logoImg.offsetWidth * (c.height / c.width);
+        const topPx     = Math.floor(minY              / c.height * renderedH);
+        const bottomPx  = Math.floor((c.height - maxY) / c.height * renderedH);
+        logoImg.style.marginTop    = `-${topPx}px`;
+        logoImg.style.marginBottom = `-${bottomPx}px`;
+      }
+      if (logoImg.complete && logoImg.naturalWidth) trimLogo();
+      else logoImg.addEventListener('load', trimLogo);
+    })();
+  </script>
+
 </body>
 </html>
