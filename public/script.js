@@ -319,35 +319,6 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
              life:55+Math.random()*65, spd:0.5+Math.random()*0.9 };
   });
 
-  // Pre-compute arrow geometry (static per call)
-  const arrowLen = Math.min(W, H) * 0.28;
-  const cx = W / 2, cy = H / 2;
-
-  function drawArrow() {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rad);                       // point in travel direction
-    const col = windColour(speedKmh, 0.55);
-    ctx.strokeStyle = col;
-    ctx.fillStyle   = col;
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = 'round';
-    // shaft
-    ctx.beginPath();
-    ctx.moveTo(0, -arrowLen);
-    ctx.lineTo(0,  arrowLen * 0.5);
-    ctx.stroke();
-    // arrowhead
-    const hw = arrowLen * 0.28, tip = arrowLen * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, tip);
-    ctx.lineTo(-hw, tip - arrowLen * 0.42);
-    ctx.lineTo( hw, tip - arrowLen * 0.42);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
   function frame() {
     // 1 — Sky gradient background
     const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -380,9 +351,6 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
         p.age=0; p.life=55+Math.random()*65; p.spd=0.5+Math.random()*0.9;
       }
     });
-
-    // 3 — Direction arrow on top
-    drawArrow();
 
     windAnimIds[idx] = requestAnimationFrame(frame);
   }
@@ -626,7 +594,8 @@ function renderDay(dayIdx) {
     const windSpeed  = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]     ?? 0) : 0;
     const windDir    = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
     document.getElementById(`windBadge${i}`).innerHTML =
-      `<span class="wd-arrow" style="display:inline-block;transform:rotate(${windDir}deg)">↑</span> ${windDirHebrew(windDir)} · ${Math.round(windSpeed)} קמ"ש`;
+      `<div class="wd-pill"><span class="wd-arrow" style="display:inline-block;transform:rotate(${windDir}deg)">↑</span> ${windDirHebrew(windDir)}</div>
+       <div class="wd-pill">${Math.round(windSpeed)} קמ"ש</div>`;
     setTimeout(() => startWindAnimation(i, windSpeed, windDir), 80);
   });
 }
