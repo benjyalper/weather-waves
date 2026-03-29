@@ -237,6 +237,10 @@ header {
   transform: scale(1.5);
   transform-origin: center center;
 }
+/* ערב icon — 50% larger than the others (1.5 × 1.5 = 2.25) */
+.col-header:nth-child(3) .col-icon-img {
+  transform: scale(2.25);
+}
 
 /* ─── Generic 3-column data row ─────────────────────────────────────────────── */
 .mx-row {
