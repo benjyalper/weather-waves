@@ -250,6 +250,32 @@ header {
   line-height: 1;
 }
 
+/* ─── Weather animations ─────────────────────────────────────────────────────── */
+@keyframes wx-spin  { to { transform: rotate(360deg); } }
+@keyframes wx-float {
+  0%, 100% { transform: translateY(0);    }
+  50%      { transform: translateY(-5px); }
+}
+@keyframes wx-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate( 4deg); }
+}
+@keyframes wx-drip {
+  0%, 100% { transform: translateY(0);   }
+  30%      { transform: translateY(-4px);}
+  65%      { transform: translateY(3px); }
+}
+@keyframes wx-flash {
+  0%, 85%, 100% { filter: brightness(1);   }
+  88%, 94%      { filter: brightness(1.8); }
+}
+
+.wx-sunny         .wx-icon { animation: wx-spin  9s  linear        infinite; }
+.wx-partly-cloudy .wx-icon { animation: wx-float 3s  ease-in-out   infinite; }
+.wx-cloudy        .wx-icon { animation: wx-sway  4s  ease-in-out   infinite; }
+.wx-rainy         .wx-icon { animation: wx-drip  2s  ease-in-out   infinite; }
+.wx-stormy        .wx-icon { animation: wx-flash 2.5s ease-in-out  infinite; }
+
 /* ─── Wave cell ──────────────────────────────────────────────────────────────── */
 .wv-cell {
   position: relative;

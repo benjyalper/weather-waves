@@ -567,6 +567,7 @@ function renderDay(dayIdx) {
     const code = wIdx !== -1 ? wHourly.weathercode[wIdx] : null;
     const wxCat = code != null ? getWeatherCategory(code) : 'cloudy';
     const wxCell = document.getElementById(`wx${i}`);
+    wxCell.className = `mx-cell wx-cell wx-${wxCat}`;
     wxCell.innerHTML = `
       <div class="wx-icon">${(WEATHER_ICONS[wxCat] || iconCloudy)()}</div>
       <div class="wx-temp">${temp != null ? temp+'°' : '--'}</div>
