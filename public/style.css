@@ -227,6 +227,14 @@ header {
   gap: 2px;
 }
 .col-icon { font-size: var(--font-lg); line-height: 1; }
+.col-icon-img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  object-position: center 25%;
+  border-radius: 50%;
+  display: block;
+}
 
 /* ─── Generic 3-column data row ─────────────────────────────────────────────── */
 .mx-row {
