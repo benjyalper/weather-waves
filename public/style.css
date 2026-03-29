@@ -319,6 +319,13 @@ header {
   pointer-events: none;
 }
 
+/* Wind direction arrow */
+.wd-arrow {
+  font-size: 0.9rem;
+  line-height: 1;
+  display: inline-block;
+}
+
 /* Speed + direction label — plain text over map */
 .wd-badge {
   position: absolute;

@@ -588,8 +588,8 @@ function renderDay(dayIdx) {
     // Wind
     const windSpeed  = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]     ?? 0) : 0;
     const windDir    = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
-    document.getElementById(`windBadge${i}`).textContent =
-      `${windDirHebrew(windDir)} · ${Math.round(windSpeed)} קמ"ש`;
+    document.getElementById(`windBadge${i}`).innerHTML =
+      `<span class="wd-arrow" style="display:inline-block;transform:rotate(${windDir}deg)">↑</span> ${windDirHebrew(windDir)} · ${Math.round(windSpeed)} קמ"ש`;
     setTimeout(() => startWindAnimation(i, windSpeed, windDir), 80);
   });
 }
