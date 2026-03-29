@@ -27,7 +27,7 @@
   <!-- Header / Logo -->
   <header>
     <div class="logo-wrap">
-      <img class="logo-img" src="logo.jpeg?v=2" alt="אל הים" />
+      <canvas class="logo-img" id="logoCanvas"></canvas>
       <div class="logo-sub">נווה ים</div>
     </div>
   </header>
@@ -132,5 +132,29 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
+
+  <!-- Remove white background from logo JPEG via canvas pixel processing -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('logoCanvas');
+      const ctx    = canvas.getContext('2d');
+      const img    = new Image();
+      img.onload = function () {
+        canvas.width  = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+        const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d  = id.data;
+        for (let i = 0; i < d.length; i += 4) {
+          // Make near-white pixels transparent
+          if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) {
+            d[i+3] = 0;
+          }
+        }
+        ctx.putImageData(id, 0, 0);
+      };
+      img.src = 'logo.jpeg?v=2';
+    })();
+  </script>
 </body>
 </html>
