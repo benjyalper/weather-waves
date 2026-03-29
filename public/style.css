@@ -52,7 +52,7 @@ body {
 header {
   background: linear-gradient(135deg, #0D47A1 0%, #0288D1 60%, #00ACC1 100%);
   color: white;
-  padding: 18px 20px 10px;
+  padding: 6px 20px 2px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(13,71,161,0.35);
 }
@@ -65,10 +65,12 @@ header {
 }
 
 .logo-img {
-  width: 220px;
+  width: 150px;
   height: auto;
-  mix-blend-mode: multiply;   /* white areas disappear on the blue header */
+  mix-blend-mode: multiply;
   display: block;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .logo-sub {
@@ -76,8 +78,8 @@ header {
   font-weight: 600;
   color: rgba(255,255,255,0.75);
   letter-spacing: 1.5px;
-  margin-top: -4px;
-  margin-bottom: 6px;
+  margin-top: -6px;
+  margin-bottom: 4px;
 }
 
 /* ─── Drum day picker ────────────────────────────────────────────────────────── */
@@ -409,7 +411,7 @@ footer {
   .mx-row      { grid-auto-rows: 140px; }
   .sun-row     { grid-auto-rows: 130px; }
   .wx-icon     { width: 60px; height: 60px; }
-  .logo-img    { width: 270px; }
+  .logo-img    { width: 180px; }
 }
 
 /* ─── Mobile tweaks (≤ 480px) ───────────────────────────────────────────────── */
