@@ -199,11 +199,12 @@ header {
   letter-spacing: 0.4px;
   opacity: 0.8;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
 }
-.col-icon { font-size: 1.0rem; line-height: 1; }
+.col-icon { font-size: 1.3rem; line-height: 1; }
 
 /* ─── Generic 3-column data row ─────────────────────────────────────────────── */
 .mx-row {

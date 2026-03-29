@@ -270,9 +270,9 @@ function windColour(kmh, alpha) {
   return                 `rgba(210, 30, 30,${alpha})`;  // storm  — red
 }
 
-// Meteorological degrees → Hebrew compass label
+// Meteorological degrees → short Hebrew compass label
 function windDirHebrew(deg) {
-  const dirs = ['צפון','צפון-מזרח','מזרח','דרום-מזרח','דרום','דרום-מערב','מערב','צפון-מערב'];
+  const dirs = ['צ׳','צ-מז','מז','ד-מז','ד׳','ד-מע','מע','צ-מע'];
   return dirs[Math.round(deg / 45) % 8];
 }
 
