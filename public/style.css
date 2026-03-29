@@ -403,11 +403,19 @@ footer {
 
 /* ─── Desktop (≥ 641px) ─────────────────────────────────────────────────────── */
 @media (min-width: 641px) {
-  .matrix      { max-width: 720px; padding: 12px 14px 24px; }
-  .mx-row      { grid-auto-rows: 140px; }
-  .sun-row     { grid-auto-rows: 130px; }
-  .wx-icon     { width: 60px; height: 60px; }
-  .logo-img    { width: 180px; }
+  .matrix       { max-width: 720px; padding: 12px 14px 24px; }
+  .mx-row       { grid-auto-rows: 140px; }
+  .sun-row      { grid-auto-rows: 130px; }
+  .wx-icon      { width: 60px; height: 60px; }
+  .logo-img     { width: 180px; }
+
+  /* Constrain drum to same width as the matrix grid */
+  .drum-wrapper {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
 }
 
 /* ─── Mobile tweaks (≤ 480px) ───────────────────────────────────────────────── */
