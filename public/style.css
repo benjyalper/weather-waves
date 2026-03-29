@@ -147,7 +147,7 @@ header {
   color: rgba(255,255,255,0.3);
 }
 
-.drum-item.today .drum-letter::after {
+.drum-item.today .drum-day::after {
   content: '•';
   display: block;
   font-size: 0.45rem;
@@ -155,9 +155,8 @@ header {
   color: #FFD600;
 }
 
-.drum-letter { font-size: var(--font-md); font-weight: var(--w-heavy); line-height: 1.1; letter-spacing: 0.3px; }
-.drum-icon   { font-size: var(--font-lg); line-height: 1.1; }
-.drum-temp   { font-size: var(--font-xs); font-weight: var(--w-mid); letter-spacing: 0.2px; }
+.drum-day  { font-size: var(--font-md); font-weight: var(--w-heavy); line-height: 1.15; letter-spacing: 0.3px; }
+.drum-date { font-size: var(--font-sm); font-weight: var(--w-mid);  line-height: 1.15; letter-spacing: 0.2px; opacity: 0.8; }
 
 .drum-fade {
   position: absolute;
@@ -260,34 +259,41 @@ header {
 
 /* ─── Weather cell ───────────────────────────────────────────────────────────── */
 .wx-cell {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
+  justify-content: flex-end;
+  padding: 0 0 8px;
 }
 
-.wx-icon {
-  width: 52px;
-  height: 52px;
+/* Lottie fills the whole cell as animated background */
+.wx-lottie {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
+/* Temperature pill overlaid at the bottom */
 .wx-temp {
+  position: relative;
+  z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: var(--text-dark);
+  color: #0D47A1;
   letter-spacing: 0.3px;
   direction: ltr;
   unicode-bidi: isolate;
   line-height: 1;
-}
-
-/* ─── Lottie weather player ──────────────────────────────────────────────────── */
-.wx-lottie {
-  width: 64px;
-  height: 64px;
-  display: block;
+  padding: 2px 10px;
+  background: rgba(255,255,255,0.75);
+  border-radius: 20px;
+  backdrop-filter: blur(3px);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+  white-space: nowrap;
 }
 
 /* ─── Wave cell ──────────────────────────────────────────────────────────────── */
@@ -335,39 +341,27 @@ header {
 
 /* ─── Wind cell ──────────────────────────────────────────────────────────────── */
 .wd-cell {
-  position: relative;   /* badge anchors to this */
+  position: relative;
+  overflow: hidden;
 }
 
-/* Map wraps fills the full tile */
-.wd-map-wrap {
+/* Schematic wind canvas fills the full tile */
+.wind-cvs {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-/* Leaflet container inside the wrap */
-.wd-map-wrap > div {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-/* Wind particle canvas over the map */
-.wd-map-wrap > canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* Wind direction arrow */
+/* Wind direction arrow in badge */
 .wd-arrow {
   font-size: 0.9rem;
   line-height: 1;
   display: inline-block;
 }
 
-/* Speed + direction label — plain text over map */
+/* Speed + direction label — pill over canvas */
 .wd-badge {
   position: absolute;
   bottom: 8px;
@@ -378,14 +372,15 @@ header {
   font-weight: var(--w-bold);
   color: #0D47A1;
   letter-spacing: 0.3px;
-  text-shadow: 0 1px 4px rgba(255,255,255,0.8);
+  padding: 2px 10px;
+  background: rgba(255,255,255,0.75);
+  border-radius: 20px;
+  backdrop-filter: blur(3px);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.10);
   white-space: nowrap;
   direction: rtl;
   unicode-bidi: embed;
 }
-
-/* Leaflet attribution tiny text */
-.leaflet-control-attribution { font-size: 8px !important; opacity: 0.45; }
 
 /* ─── Sunrise / Sunset row ───────────────────────────────────────────────────── */
 .sun-row {

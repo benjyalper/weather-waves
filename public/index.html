@@ -13,7 +13,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -81,27 +80,18 @@
       </div>
     </div>
 
-    <!-- Wind row: Leaflet maps + particle animation -->
+    <!-- Wind row: schematic canvas animation -->
     <div class="mx-row" id="windRow">
       <div class="mx-cell wd-cell">
-        <div class="wd-map-wrap">
-          <div id="windMap0"></div>
-          <canvas id="windCanvas0"></canvas>
-        </div>
+        <canvas id="windCanvas0" class="wind-cvs"></canvas>
         <div class="wd-badge" id="windBadge0">--</div>
       </div>
       <div class="mx-cell wd-cell">
-        <div class="wd-map-wrap">
-          <div id="windMap1"></div>
-          <canvas id="windCanvas1"></canvas>
-        </div>
+        <canvas id="windCanvas1" class="wind-cvs"></canvas>
         <div class="wd-badge" id="windBadge1">--</div>
       </div>
       <div class="mx-cell wd-cell">
-        <div class="wd-map-wrap">
-          <div id="windMap2"></div>
-          <canvas id="windCanvas2"></canvas>
-        </div>
+        <canvas id="windCanvas2" class="wind-cvs"></canvas>
         <div class="wd-badge" id="windBadge2">--</div>
       </div>
     </div>
@@ -131,7 +121,6 @@
   </footer>
 
   <script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 
   <!-- Trim transparent padding from logo PNG so header gaps are exact -->

@@ -267,8 +267,7 @@ const WAVE_ICONS = {
   'medium': iconWaveMedium, 'high': iconWaveHigh
 };
 
-// ─── Leaflet maps + animation handles ────────────────────────────────────────
-let leafletMaps = [null, null, null];  // one per time slot
+// ─── Animation handles ────────────────────────────────────────────────────────
 let windAnimIds = [null, null, null];
 let waveAnimIds = [null, null, null];
 
@@ -286,25 +285,7 @@ function windDirHebrew(deg) {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-// ─── Initialise Leaflet maps (once) ───────────────────────────────────────────
-function initLeafletMaps() {
-  [0,1,2].forEach(i => {
-    if (leafletMaps[i]) return;
-    leafletMaps[i] = L.map(`windMap${i}`, {
-      center: [LAT, LON], zoom: 14,
-      zoomControl: false, dragging: false,
-      scrollWheelZoom: false, doubleClickZoom: false,
-      keyboard: false,
-      attributionControl: i === 2
-    });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(leafletMaps[i]);
-  });
-}
-
-// ─── Wind particle animation ───────────────────────────────────────────────────
+// ─── Wind schematic canvas animation ──────────────────────────────────────────
 function startWindAnimation(idx, speedKmh, dirDeg) {
   const canvas = document.getElementById(`windCanvas${idx}`);
   if (!canvas) return;
@@ -338,8 +319,45 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
              life:55+Math.random()*65, spd:0.5+Math.random()*0.9 };
   });
 
+  // Pre-compute arrow geometry (static per call)
+  const arrowLen = Math.min(W, H) * 0.28;
+  const cx = W / 2, cy = H / 2;
+
+  function drawArrow() {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rad);                       // point in travel direction
+    const col = windColour(speedKmh, 0.55);
+    ctx.strokeStyle = col;
+    ctx.fillStyle   = col;
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    // shaft
+    ctx.beginPath();
+    ctx.moveTo(0, -arrowLen);
+    ctx.lineTo(0,  arrowLen * 0.5);
+    ctx.stroke();
+    // arrowhead
+    const hw = arrowLen * 0.28, tip = arrowLen * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, tip);
+    ctx.lineTo(-hw, tip - arrowLen * 0.42);
+    ctx.lineTo( hw, tip - arrowLen * 0.42);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function frame() {
-    ctx.clearRect(0, 0, W, H);
+    // 1 — Sky gradient background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,   'rgba(178,216,248,1)');
+    bg.addColorStop(0.6, 'rgba(213,236,252,1)');
+    bg.addColorStop(1,   'rgba(236,248,255,1)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // 2 — Wind streak particles
     particles.forEach(p => {
       p.history.push({ x:p.x, y:p.y });
       if (p.history.length > MAX_TRAIL) p.history.shift();
@@ -349,7 +367,7 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
       const lifeFade = Math.sin((p.age / p.life) * Math.PI);
       for (let i = 1; i < p.history.length; i++) {
         const t = i / p.history.length;
-        ctx.strokeStyle = windColour(speedKmh, t * lifeFade * 0.88);
+        ctx.strokeStyle = windColour(speedKmh, t * lifeFade * 0.78);
         ctx.lineWidth   = 0.8 + t * 0.9;
         ctx.beginPath();
         ctx.moveTo(p.history[i-1].x, p.history[i-1].y);
@@ -362,6 +380,10 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
         p.age=0; p.life=55+Math.random()*65; p.spd=0.5+Math.random()*0.9;
       }
     });
+
+    // 3 — Direction arrow on top
+    drawArrow();
+
     windAnimIds[idx] = requestAnimationFrame(frame);
   }
   frame();
@@ -462,9 +484,8 @@ function buildDrum(daily) {
   ydItem.className = 'drum-item drum-yesterday';
   ydItem.dataset.idx = '-1';
   ydItem.innerHTML = `
-    <div class="drum-letter">${HEBREW_DAYS[yd.getDay()]}</div>
-    <div class="drum-icon">—</div>
-    <div class="drum-temp">—</div>
+    <div class="drum-day">אתמול</div>
+    <div class="drum-date">${yd.getDate()}/${yd.getMonth()+1}</div>
   `;
   track.appendChild(ydItem);
 
@@ -480,12 +501,15 @@ function buildDrum(daily) {
     const maxT    = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
 
     const item = document.createElement('div');
+    const dd   = new Date(dateStr + 'T12:00:00');
+    const dayLabel  = isToday ? 'היום' : HEBREW_DAY_NAMES[dow];
+    const dateLabel = `${dd.getDate()}/${dd.getMonth()+1}`;
+
     item.className = 'drum-item' + (isToday ? ' today' : '');
     item.dataset.idx = String(i);
     item.innerHTML = `
-      <div class="drum-letter">${letter}</div>
-      <div class="drum-icon">${emoji}</div>
-      <div class="drum-temp">${maxT}°</div>
+      <div class="drum-day">${dayLabel}</div>
+      <div class="drum-date">${dateLabel}</div>
     `;
     item.addEventListener('click', () => scrollDrumTo(i));
     track.appendChild(item);
@@ -568,7 +592,6 @@ function renderDay(dayIdx) {
   document.getElementById('sunsetVal').textContent  = setRaw.slice(11,16)  || '--:--';
 
   // ── Weather + Wave + Wind per time slot ──
-  initLeafletMaps();
 
   TIME_SLOTS.forEach(({ hour }, i) => {
     // Weather
