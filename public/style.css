@@ -263,23 +263,23 @@ header {
   overflow: hidden;
 }
 
-/* Lottie centred + zoomed via transform so it fills the tile */
+/* Lottie: anchored to dead centre, then scaled up to fill tile */
 .wx-lottie {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
   width: 100%;
   height: 100%;
   display: block;
-  transform: scale(1.45);
-  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(1.45);
 }
 
-/* Temperature pill — top-centre, matching wave/wind pill style */
+/* Temperature pill: dead centre, above the Lottie */
 .wx-temp {
   position: absolute;
-  top: 8px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
