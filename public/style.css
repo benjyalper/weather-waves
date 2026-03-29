@@ -271,7 +271,7 @@ header {
   width: 100%;
   height: 100%;
   display: block;
-  transform: translate(-50%, -50%) scale(1.45);
+  transform: translate(-50%, -50%) scale(1.74);
 }
 
 /* Temperature pill: dead centre, above the Lottie */
