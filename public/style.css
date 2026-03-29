@@ -8,8 +8,21 @@
   --text-dark: #0D47A1;
   --text-mid:  #455A64;
   --gap:       8px;
-  --tile-font: 0.85rem;      /* uniform tile value font size */
-  --tile-weight: 700;
+
+  /* ── Typography scale ── */
+  --font-xs:   0.70rem;   /* footer · sub-labels · sea-temp */
+  --font-sm:   0.82rem;   /* tile values · badges · col-headers */
+  --font-md:   1.02rem;   /* drum letters · prominent labels */
+  --font-lg:   1.30rem;   /* drum icons · col icons */
+
+  /* ── Weight scale ── */
+  --w-mid:     600;       /* secondary / captions */
+  --w-bold:    700;       /* standard values */
+  --w-heavy:   800;       /* headings · prominent numbers */
+
+  /* legacy aliases — kept so nothing breaks */
+  --tile-font:   var(--font-sm);
+  --tile-weight: var(--w-bold);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,8 +84,8 @@ header {
 }
 
 .logo-sub {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-xs);
+  font-weight: var(--w-mid);
   color: rgba(255,255,255,0.75);
   letter-spacing: 1.5px;
   margin-bottom: 2px;
@@ -137,9 +150,9 @@ header {
   color: #FFD600;
 }
 
-.drum-letter { font-size: 1.1rem; font-weight: 800; line-height: 1.1; }
-.drum-icon   { font-size: 1.35rem; line-height: 1.1; }
-.drum-temp   { font-size: var(--tile-font); font-weight: var(--tile-weight); }
+.drum-letter { font-size: var(--font-md); font-weight: var(--w-heavy); line-height: 1.1; letter-spacing: 0.3px; }
+.drum-icon   { font-size: var(--font-lg); line-height: 1.1; }
+.drum-temp   { font-size: var(--font-xs); font-weight: var(--w-mid); letter-spacing: 0.2px; }
 
 .drum-fade {
   position: absolute;
@@ -197,10 +210,10 @@ header {
   text-align: center;
 }
 .col-header {
-  font-size: var(--tile-font);
-  font-weight: 800;
+  font-size: var(--font-sm);
+  font-weight: var(--w-heavy);
   color: var(--text-dark);
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   opacity: 0.8;
   display: flex;
   flex-direction: column;
@@ -208,7 +221,7 @@ header {
   justify-content: center;
   gap: 2px;
 }
-.col-icon { font-size: 1.3rem; line-height: 1; }
+.col-icon { font-size: var(--font-lg); line-height: 1; }
 
 /* ─── Generic 3-column data row ─────────────────────────────────────────────── */
 .mx-row {
@@ -242,9 +255,10 @@ header {
 }
 
 .wx-temp {
-  font-size: var(--tile-font);
-  font-weight: var(--tile-weight);
+  font-size: var(--font-sm);
+  font-weight: var(--w-bold);
   color: var(--text-dark);
+  letter-spacing: 0.3px;
   direction: ltr;
   unicode-bidi: isolate;
   line-height: 1;
@@ -299,9 +313,10 @@ header {
 .wv-val, .sea-temp {
   position: relative;
   z-index: 2;
-  font-size: var(--tile-font);
-  font-weight: var(--tile-weight);
+  font-size: var(--font-sm);
+  font-weight: var(--w-bold);
   color: #0D47A1;
+  letter-spacing: 0.3px;
   text-align: center;
   padding: 2px 8px;
   background: rgba(255,255,255,0.72);
@@ -312,8 +327,8 @@ header {
 }
 
 .sea-temp {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-xs);
+  font-weight: var(--w-mid);
   color: #01579B;
   background: rgba(255,255,255,0.55);
 }
@@ -359,9 +374,10 @@ header {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  font-size: var(--tile-font);
-  font-weight: var(--tile-weight);
+  font-size: var(--font-sm);
+  font-weight: var(--w-bold);
   color: #0D47A1;
+  letter-spacing: 0.3px;
   text-shadow: 0 1px 4px rgba(255,255,255,0.8);
   white-space: nowrap;
   direction: rtl;
@@ -398,17 +414,17 @@ header {
 }
 
 .sun-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: var(--font-xs);
+  font-weight: var(--w-mid);
+  letter-spacing: 0.8px;
   opacity: 0.88;
   margin-bottom: 2px;
 }
 
 .sun-time {
-  font-size: var(--tile-font);
-  font-weight: 800;
-  letter-spacing: 1px;
+  font-size: var(--font-sm);
+  font-weight: var(--w-heavy);
+  letter-spacing: 0.8px;
   direction: ltr;
   unicode-bidi: isolate;
 }
@@ -425,7 +441,8 @@ header {
 footer {
   text-align: center;
   padding: 10px 16px 18px;
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
+  font-weight: var(--w-mid);
   color: var(--text-mid);
   opacity: 0.75;
 }
@@ -462,6 +479,6 @@ footer {
   .mx-row      { grid-auto-rows: 100px; }
   .sun-row     { grid-auto-rows: 95px; }
   .wx-icon     { width: 44px; height: 44px; }
-  .drum-letter { font-size: 1.0rem; }
-  .drum-icon   { font-size: 1.2rem; }
+  .drum-letter { font-size: var(--font-sm); }
+  .drum-icon   { font-size: var(--font-md); }
 }
