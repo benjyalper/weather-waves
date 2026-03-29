@@ -548,12 +548,15 @@ function renderDay(dayIdx) {
       <div class="wx-temp">${temp != null ? temp+'°' : '--'}</div>
     `;
 
-    // Waves
+    // Waves + sea surface temperature
     const mIdx       = findHourIndex(marineHourly.time, dateStr, hour);
     const waveH      = mIdx !== -1 ? marineHourly.wave_height?.[mIdx] : null;
     const waveDir    = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
+    const seaTemp    = mIdx !== -1 ? marineHourly.sea_surface_temperature?.[mIdx] : null;
     const wvValEl    = document.getElementById(`waveVal${i}`);
     wvValEl.textContent = waveH != null ? `${waveH.toFixed(1)} מ'` : '--';
+    const seaTempEl  = document.getElementById(`seaTemp${i}`);
+    if (seaTempEl) seaTempEl.textContent = seaTemp != null ? `🌡 ${Math.round(seaTemp)}°` : '--°';
 
     // Trigger wave canvas after a short delay so the cell has rendered dimensions
     setTimeout(() => startWaveAnimation(i, waveH ?? 0.5, waveDir), 50);

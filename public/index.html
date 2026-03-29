@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>איים בזרם נווה ים</title>
+  <title>אל הים</title>
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Waves" />
+  <meta name="apple-mobile-web-app-title" content="אל הים" />
   <meta name="theme-color" content="#0D47A1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -21,12 +24,19 @@
     <p class="loading-text">טוען נתונים...</p>
   </div>
 
-  <!-- Header -->
+  <!-- Header / Logo -->
   <header>
-    <h1 class="app-title">🌊 איים בזרם נווה ים</h1>
+    <div class="logo-wrap">
+      <h1 class="app-title">אל הים</h1>
+      <div class="logo-sub">נווה ים · ים התיכון</div>
+      <svg class="logo-wave-bar" viewBox="0 0 300 16" preserveAspectRatio="none">
+        <path d="M0,8 Q18.75,0 37.5,8 Q56.25,16 75,8 Q93.75,0 112.5,8 Q131.25,16 150,8 Q168.75,0 187.5,8 Q206.25,16 225,8 Q243.75,0 262.5,8 Q281.25,16 300,8"
+              fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
   </header>
 
-  <!-- ─── Drum day picker: 3 days visible, center = selected ──────────────── -->
+  <!-- ─── Drum day picker ──────────────────────────────────────────────────────── -->
   <div class="drum-wrapper">
     <div class="drum-track" id="drumTrack">
       <!-- populated by buildDrum() in script.js -->
@@ -39,32 +49,14 @@
   <!-- Error banner -->
   <div class="error-banner" id="errorBanner" role="alert"></div>
 
-  <!-- ─── Data matrix ───────────────────────────────────────────────────────── -->
+  <!-- ─── Data matrix ──────────────────────────────────────────────────────────── -->
   <main class="matrix">
 
-    <!-- Sunrise / Sunset — 2 tiles, same height as data rows -->
-    <div class="sun-row">
-      <!-- Sunrise tile (right in RTL = first DOM child) -->
-      <div class="mx-cell sun-tile sunrise-tile">
-        <div class="sun-info">
-          <div class="sun-label">זריחה</div>
-          <div class="sun-time" id="sunriseVal">--:--</div>
-        </div>
-      </div>
-      <!-- Sunset tile (left in RTL = second DOM child) -->
-      <div class="mx-cell sun-tile sunset-tile">
-        <div class="sun-info">
-          <div class="sun-label">שקיעה</div>
-          <div class="sun-time" id="sunsetVal">--:--</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Column headers: DOM order = [morning, noon, evening]; RTL renders right→left -->
+    <!-- Column headers with time-of-day icons -->
     <div class="col-header-row">
-      <div class="col-header">בוקר</div>
-      <div class="col-header">צהריים</div>
-      <div class="col-header">ערב</div>
+      <div class="col-header"><span class="col-icon">🌅</span> בוקר</div>
+      <div class="col-header"><span class="col-icon">☀️</span> צהריים</div>
+      <div class="col-header"><span class="col-icon">🌆</span> ערב</div>
     </div>
 
     <!-- Weather row -->
@@ -74,18 +66,21 @@
       <div class="mx-cell wx-cell" id="wx2"></div>
     </div>
 
-    <!-- Wave row -->
+    <!-- Wave row (includes sea surface temperature) -->
     <div class="mx-row" id="waveRow">
       <div class="mx-cell wv-cell" id="wv0">
         <canvas class="wave-cvs" id="waveCanvas0"></canvas>
+        <div class="sea-temp" id="seaTemp0">--°</div>
         <div class="wv-val" id="waveVal0">--</div>
       </div>
       <div class="mx-cell wv-cell" id="wv1">
         <canvas class="wave-cvs" id="waveCanvas1"></canvas>
+        <div class="sea-temp" id="seaTemp1">--°</div>
         <div class="wv-val" id="waveVal1">--</div>
       </div>
       <div class="mx-cell wv-cell" id="wv2">
         <canvas class="wave-cvs" id="waveCanvas2"></canvas>
+        <div class="sea-temp" id="seaTemp2">--°</div>
         <div class="wv-val" id="waveVal2">--</div>
       </div>
     </div>
@@ -112,6 +107,22 @@
           <canvas id="windCanvas2"></canvas>
         </div>
         <div class="wd-badge" id="windBadge2">--</div>
+      </div>
+    </div>
+
+    <!-- Sunrise / Sunset — bottom row -->
+    <div class="sun-row">
+      <div class="mx-cell sun-tile sunrise-tile">
+        <div class="sun-info">
+          <div class="sun-label">זריחה</div>
+          <div class="sun-time" id="sunriseVal">--:--</div>
+        </div>
+      </div>
+      <div class="mx-cell sun-tile sunset-tile">
+        <div class="sun-info">
+          <div class="sun-label">שקיעה</div>
+          <div class="sun-time" id="sunsetVal">--:--</div>
+        </div>
       </div>
     </div>
 
