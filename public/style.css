@@ -331,6 +331,8 @@ header {
   color: #fff;
   text-shadow: 0 1px 6px rgba(0,0,0,0.7);
   white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: embed;
 }
 
 /* Leaflet attribution tiny text */
