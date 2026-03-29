@@ -434,10 +434,10 @@ header {
 
 /* Photo backgrounds — zoom in to crop white image borders */
 .sunrise-tile {
-  background: #f5c97a url('sunrise.png') center center / 150% auto no-repeat;
+  background: #f5c97a url('Smiling%20sun%20over%20cheerful%20beach.png') center center / 150% auto no-repeat;
 }
 .sunset-tile {
-  background: #e07030 url('sunset.PNG') center center / 150% auto no-repeat;
+  background: #e07030 url('Smiling%20sunset%20over%20tropical%20beach.png') center center / 150% auto no-repeat;
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */
