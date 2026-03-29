@@ -319,7 +319,7 @@ header {
   pointer-events: none;
 }
 
-/* Speed + direction label — centered glass pill over map */
+/* Speed + direction label — plain text over map */
 .wd-badge {
   position: absolute;
   bottom: 8px;
@@ -328,13 +328,9 @@ header {
   z-index: 10;
   font-size: var(--tile-font);
   font-weight: var(--tile-weight);
-  color: #0D47A1;
-  background: rgba(255,255,255,0.82);
-  padding: 3px 10px;
-  border-radius: 20px;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
   white-space: nowrap;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 1px 8px rgba(0,0,0,0.14);
 }
 
 /* Leaflet attribution tiny text */
