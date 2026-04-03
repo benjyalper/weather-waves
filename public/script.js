@@ -594,7 +594,7 @@ function renderDay(dayIdx) {
     const windSpeed  = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]     ?? 0) : 0;
     const windDir    = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
     document.getElementById(`windBadge${i}`).innerHTML =
-      `<div class="wd-pill"><span class="wd-arrow" style="display:inline-block;transform:rotate(${windDir}deg)">↑</span> ${windDirHebrew(windDir)}</div>
+      `<div class="wd-pill"><span class="wd-arrow" style="display:inline-block;transform:rotate(${(windDir + 180) % 360}deg)">↑</span> ${windDirHebrew(windDir)}</div>
        <div class="wd-pill">${Math.round(windSpeed)} קמ"ש</div>`;
     setTimeout(() => startWindAnimation(i, windSpeed, windDir), 80);
   });
