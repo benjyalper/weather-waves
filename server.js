@@ -1,9 +1,14 @@
 /**
  * server.js — Weather + Waves backend
+ *
+ * Serves the static frontend from /public and proxies
+ * requests to the Open-Meteo weather and marine APIs.
  */
 
 const express = require('express');
+const https = require('https');
 const path = require('path');
+const zlib = require('zlib');
 
 require('./generate-icon');
 
@@ -17,44 +22,76 @@ function parseCoordinate(value, fallback) {
   return Number.isFinite(num) ? num : fallback;
 }
 
-async function fetchJSON(url, label = 'Upstream', timeoutMs = 10000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+function decodeBody(buffer, encoding = '') {
+  const enc = String(encoding).toLowerCase();
 
-  try {
+  if (enc.includes('gzip')) {
+    return zlib.gunzipSync(buffer).toString('utf8');
+  }
+  if (enc.includes('deflate')) {
+    return zlib.inflateSync(buffer).toString('utf8');
+  }
+  if (enc.includes('br')) {
+    return zlib.brotliDecompressSync(buffer).toString('utf8');
+  }
+
+  return buffer.toString('utf8');
+}
+
+function fetchJSON(url, label = 'Upstream', timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
     console.log(`[${label}] Requesting: ${url}`);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'weather-waves/1.0',
+    const req = https.request(
+      url,
+      {
+        method: 'GET',
+        family: 4,
+        timeout: timeoutMs,
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'User-Agent': 'weather-waves/1.0'
+        }
       },
-      signal: controller.signal,
+      (res) => {
+        const chunks = [];
+
+        res.on('data', (chunk) => chunks.push(chunk));
+
+        res.on('end', () => {
+          try {
+            const buffer = Buffer.concat(chunks);
+            const rawText = decodeBody(buffer, res.headers['content-encoding']);
+
+            console.log(`[${label}] Status: ${res.statusCode}`);
+            console.log(`[${label}] Body preview: ${rawText.slice(0, 300)}`);
+
+            if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+              return reject(
+                new Error(`Upstream responded with status ${res.statusCode}`)
+              );
+            }
+
+            const json = JSON.parse(rawText);
+            resolve(json);
+          } catch (err) {
+            reject(new Error(`Failed to parse upstream response: ${err.message}`));
+          }
+        });
+      }
+    );
+
+    req.on('timeout', () => {
+      req.destroy(new Error(`Upstream timeout after ${timeoutMs}ms`));
     });
 
-    const rawText = await response.text();
+    req.on('error', (err) => {
+      reject(err);
+    });
 
-    console.log(`[${label}] Status: ${response.status}`);
-    console.log(`[${label}] Body preview: ${rawText.slice(0, 300)}`);
-
-    if (!response.ok) {
-      throw new Error(`Upstream responded with status ${response.status}`);
-    }
-
-    try {
-      return JSON.parse(rawText);
-    } catch {
-      throw new Error('Failed to parse upstream response');
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      throw new Error(`Upstream timeout after ${timeoutMs}ms`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeout);
-  }
+    req.end();
+  });
 }
 
 app.get('/api/weather', async (req, res) => {
@@ -68,7 +105,7 @@ app.get('/api/weather', async (req, res) => {
     `&current=temperature_2m,weather_code` +
     `&hourly=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset` +
-    `&timezone=auto`;
+    `&timezone=Asia%2FJerusalem`;
 
   try {
     const data = await fetchJSON(url, 'Weather', 10000);
@@ -77,7 +114,7 @@ app.get('/api/weather', async (req, res) => {
     console.error('[Weather] Error:', err.message);
     res.status(502).json({
       error: 'Failed to fetch weather data',
-      details: err.message,
+      details: err.message
     });
   }
 });
@@ -91,7 +128,7 @@ app.get('/api/marine', async (req, res) => {
     `?latitude=${encodeURIComponent(lat)}` +
     `&longitude=${encodeURIComponent(lon)}` +
     `&hourly=wave_height,wave_direction,sea_surface_temperature` +
-    `&timezone=auto`;
+    `&timezone=Asia%2FJerusalem`;
 
   try {
     const data = await fetchJSON(url, 'Marine', 10000);
@@ -100,7 +137,7 @@ app.get('/api/marine', async (req, res) => {
     console.error('[Marine] Error:', err.message);
     res.status(502).json({
       error: 'Failed to fetch marine data',
-      details: err.message,
+      details: err.message
     });
   }
 });
