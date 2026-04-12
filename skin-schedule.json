@@ -1,26 +1,14 @@
 [
   {
+    "name": "tropical",
+    "label": "tropical",
+    "start": "04-12",
+    "end": "04-17"
+  },
+  {
     "name": "yom-haatzmaut",
     "label": "יום העצמאות",
     "start": "04-22",
     "end": "04-30"
-  },
-  {
-    "name": "tropical",
-    "label": "tropical",
-    "start": "04-15",
-    "end": "04-17"
-  },
-  {
-    "name": "grungeskin",
-    "label": "grungeskin",
-    "start": "12-12",
-    "end": "12-13"
-  },
-  {
-    "name": "brawlstarsskin",
-    "label": "brawlstarsskin",
-    "start": "04-12",
-    "end": "04-15"
   }
 ]
