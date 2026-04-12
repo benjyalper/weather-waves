@@ -464,7 +464,7 @@ function buildDrum(daily) {
     const dow     = date.getDay();
     const letter  = HEBREW_DAYS[dow];
     const isToday = dateStr === todayStr;
-    const cat     = daily ? getWeatherCategory(daily.weathercode[i]) : 'cloudy';
+    const cat     = daily ? getWeatherCategory(daily.weather_code[i]) : 'cloudy';
     const emoji   = WEATHER_EMOJI[cat];
     const maxT    = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
 
@@ -565,7 +565,7 @@ function renderDay(dayIdx) {
     // Weather
     const wIdx = findHourIndex(wHourly.time, dateStr, hour);
     const temp = wIdx !== -1 ? Math.round(wHourly.temperature_2m[wIdx]) : null;
-    const code = wIdx !== -1 ? wHourly.weathercode[wIdx] : null;
+    const code = wIdx !== -1 ? wHourly.weather_code[wIdx] : null;
     const wxCat = code != null ? getWeatherCategory(code) : 'cloudy';
     const wxCell = document.getElementById(`wx${i}`);
     wxCell.className = `mx-cell wx-cell wx-${wxCat}`;
