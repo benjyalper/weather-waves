@@ -1,12 +1,12 @@
 /* ─── Reset & Variables ────────────────────────────────────────────────────── */
 :root {
-  --primary:   #5C3A1E;
-  --accent:    #8B6914;
-  --card-bg:   #F5EDD0;
-  --shadow:    0 4px 16px rgba(92,58,0,0.18);
-  --radius:    12px;
-  --text-dark: #3D2400;
-  --text-mid:  #7A5C30;
+  --primary:   #1565C0;
+  --accent:    #0288D1;
+  --card-bg:   #ffffff;
+  --shadow:    0 4px 16px rgba(2,136,209,0.14);
+  --radius:    14px;
+  --text-dark: #0D47A1;
+  --text-mid:  #455A64;
   --gap:       8px;
 
   /* ── Typography scale ── */
@@ -29,7 +29,7 @@
 
 body {
   font-family: 'Heebo', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%);
+  background: linear-gradient(160deg, #E3F2FD 0%, #E0F7FA 55%, #B3E5FC 100%);
   min-height: 100vh;
   color: var(--text-dark);
   overflow-x: hidden;
@@ -40,7 +40,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(92,58,30,0.85);
+  background: rgba(13,71,161,0.82);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -63,11 +63,11 @@ body {
 
 /* ─── Header / Logo ──────────────────────────────────────────────────────────── */
 header {
-  background: url('/skin/header-bg.png') center center / cover no-repeat;
+  background: linear-gradient(135deg, #0D47A1 0%, #0288D1 60%, #00ACC1 100%);
   color: white;
   padding: 36px 20px 36px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(92,58,0,0.45);
+  box-shadow: 0 4px 20px rgba(13,71,161,0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +99,7 @@ header {
 /* ─── Drum day picker ────────────────────────────────────────────────────────── */
 .drum-wrapper {
   position: relative;
-  background: url('/skin/drum-bg.png') center top / cover no-repeat;
+  background: linear-gradient(135deg, #0D47A1 0%, #0277BD 60%, #0097A7 100%);
   overflow: hidden;
   padding-bottom: 10px;
 }
@@ -131,20 +131,20 @@ header {
   padding: 8px 4px;
   border-radius: 12px;
   cursor: pointer;
-  color: rgba(0,56,168,0.55);
+  color: rgba(255,255,255,0.5);
   transition: color 0.3s, transform 0.35s ease, opacity 0.35s ease;
   direction: rtl;
   user-select: none;
   transform-origin: center center;
 }
 
-.drum-item.active { color: #002FA7; }
+.drum-item.active { color: #fff; }
 
 /* Yesterday — dimmed, not interactive */
 .drum-item.drum-yesterday {
   cursor: default;
   pointer-events: none;
-  color: rgba(0,56,168,0.3);
+  color: rgba(255,255,255,0.3);
 }
 
 .drum-item.today .drum-day::after {
@@ -167,18 +167,18 @@ header {
 }
 .drum-fade-left {
   left: 0;
-  background: linear-gradient(to right, rgba(180,140,60,0.9) 0%, transparent 100%);
+  background: linear-gradient(to right, rgba(13,71,161,0.88) 0%, transparent 100%);
 }
 .drum-fade-right {
   right: 0;
-  background: linear-gradient(to left, rgba(180,140,60,0.9) 0%, transparent 100%);
+  background: linear-gradient(to left, rgba(13,71,161,0.88) 0%, transparent 100%);
 }
 
 .drum-ring {
   position: absolute;
   top: 6px; bottom: 6px;
   left: 33.333%; width: 33.333%;
-  border: 2px solid rgba(0,56,168,0.65);
+  border: 2px solid rgba(255,255,255,0.55);
   border-radius: 12px;
   pointer-events: none;
   z-index: 3;
@@ -261,7 +261,6 @@ header {
 .wx-cell {
   position: relative;
   overflow: hidden;
-  background: url('/skin/weather-card-bg.png') center center / cover no-repeat;
 }
 
 /* Lottie: anchored to dead centre, then scaled up to fill tile */
@@ -284,7 +283,7 @@ header {
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #3D2400;
+  color: #0D47A1;
   letter-spacing: 0.3px;
   direction: ltr;
   unicode-bidi: isolate;
@@ -305,12 +304,7 @@ header {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  background: url('/skin/wave-row-bg.png') center center / 300% 100% no-repeat;
 }
-/* Each cell shows a different third of the panoramic wave image */
-#waveRow .mx-cell:nth-child(1) { background-position: right center; }
-#waveRow .mx-cell:nth-child(2) { background-position: center center; }
-#waveRow .mx-cell:nth-child(3) { background-position: left center; }
 
 /* Canvas fills cell as animated background */
 .wave-cvs {
@@ -327,7 +321,7 @@ header {
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #3D2400;
+  color: #0D47A1;
   letter-spacing: 0.3px;
   text-align: center;
   padding: 2px 8px;
@@ -341,7 +335,7 @@ header {
 .sea-temp {
   font-size: var(--font-xs);
   font-weight: var(--w-mid);
-  color: #5C3A1E;
+  color: #01579B;
   background: rgba(255,255,255,0.55);
 }
 
@@ -349,11 +343,7 @@ header {
 .wd-cell {
   position: relative;
   overflow: hidden;
-  background: url('/skin/wind-row-bg.png') center center / 300% 100% no-repeat;
 }
-#windRow .mx-cell:nth-child(1) { background-position: right center; }
-#windRow .mx-cell:nth-child(2) { background-position: center center; }
-#windRow .mx-cell:nth-child(3) { background-position: left center; }
 
 /* Schematic wind canvas fills the full tile */
 .wind-cvs {
@@ -388,7 +378,7 @@ header {
 .wd-pill {
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #3D2400;
+  color: #0D47A1;
   letter-spacing: 0.3px;
   padding: 3px 12px;
   background: rgba(255,255,255,0.78);
@@ -446,27 +436,12 @@ header {
   unicode-bidi: isolate;
 }
 
-/* Illustrated sun tiles from sliced skin artwork */
+/* Photo backgrounds — zoom in to crop white image borders */
 .sunrise-tile {
-  background: url('/skin/sunrise-bg.png') center center / cover no-repeat;
+  background: #f5c97a url('Smiling%20sun%20over%20cheerful%20beach.png') center center / 150% auto no-repeat;
 }
 .sunset-tile {
-  background: url('/skin/sunset-bg.png') center center / cover no-repeat;
-}
-
-/* ─── Bunting strip above sun row (real artwork slice) ───────────────────── */
-.sun-row {
-  position: relative;
-  margin-top: 10px;
-}
-.sun-row::before {
-  content: '';
-  position: absolute;
-  top: -22px;
-  left: 0; right: 0;
-  height: 22px;
-  z-index: 5;
-  background: url('/skin/bunting-bg.png') center / cover no-repeat;
+  background: #e07030 url('Smiling%20sunset%20over%20tropical%20beach.png') center center / 150% auto no-repeat;
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */

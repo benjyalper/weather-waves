@@ -1,0 +1,82 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Yom HaAtzmaut skin — overrides only, loaded on top of base style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary:   #5C3A1E;
+  --accent:    #8B6914;
+  --card-bg:   #F5EDD0;
+  --shadow:    0 4px 16px rgba(92,58,0,0.18);
+  --radius:    12px;
+  --text-dark: #3D2400;
+  --text-mid:  #7A5C30;
+}
+
+body {
+  background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%);
+}
+
+.loading-overlay {
+  background: rgba(92,58,30,0.85);
+}
+
+header {
+  background: url('/skins/yom-haatzmaut/skin/header-bg.png') center center / cover no-repeat;
+  box-shadow: 0 4px 20px rgba(92,58,0,0.45);
+}
+
+.drum-wrapper {
+  background: url('/skins/yom-haatzmaut/skin/drum-bg.png') center top / cover no-repeat;
+}
+
+.drum-fade-left  { background: linear-gradient(to right, rgba(180,140,60,0.9) 0%, transparent 100%); }
+.drum-fade-right { background: linear-gradient(to left,  rgba(180,140,60,0.9) 0%, transparent 100%); }
+
+.drum-item          { color: rgba(0,56,168,0.55); }
+.drum-item.active   { color: #002FA7; }
+.drum-item.drum-yesterday { color: rgba(0,56,168,0.3); }
+.drum-ring          { border: 2px solid rgba(0,56,168,0.65); }
+
+.wx-cell {
+  background: url('/skins/yom-haatzmaut/skin/weather-card-bg.png') center center / cover no-repeat;
+}
+
+.wv-cell {
+  background: url('/skins/yom-haatzmaut/skin/wave-row-bg.png') center center / 300% 100% no-repeat;
+}
+#waveRow .mx-cell:nth-child(1) { background-position: right center; }
+#waveRow .mx-cell:nth-child(2) { background-position: center center; }
+#waveRow .mx-cell:nth-child(3) { background-position: left center; }
+
+.wd-cell {
+  background: url('/skins/yom-haatzmaut/skin/wind-row-bg.png') center center / 300% 100% no-repeat;
+}
+#windRow .mx-cell:nth-child(1) { background-position: right center; }
+#windRow .mx-cell:nth-child(2) { background-position: center center; }
+#windRow .mx-cell:nth-child(3) { background-position: left center; }
+
+.wx-temp        { color: #3D2400; }
+.wv-val         { color: #3D2400; }
+.sea-temp       { color: #5C3A1E; }
+.wd-pill        { color: #3D2400; }
+
+.sunrise-tile {
+  background: url('/skins/yom-haatzmaut/skin/sunrise-bg.png') center center / cover no-repeat;
+}
+.sunset-tile {
+  background: url('/skins/yom-haatzmaut/skin/sunset-bg.png') center center / cover no-repeat;
+}
+
+.sun-row {
+  position: relative;
+  margin-top: 10px;
+}
+.sun-row::before {
+  content: '';
+  position: absolute;
+  top: -22px;
+  left: 0; right: 0;
+  height: 22px;
+  z-index: 5;
+  background: url('/skins/yom-haatzmaut/skin/bunting-bg.png') center / cover no-repeat;
+}

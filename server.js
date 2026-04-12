@@ -9,6 +9,7 @@ const express = require('express');
 const https = require('https');
 const path = require('path');
 const zlib = require('zlib');
+const fs = require('fs');
 
 require('./generate-icon');
 
@@ -16,6 +17,14 @@ const app = express();
 const PORT = process.env.PORT || 3008;
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── Active skin ──────────────────────────────────────────────────────────────
+app.get('/api/active-skin', (req, res) => {
+  const schedule = JSON.parse(fs.readFileSync(path.join(__dirname, 'skin-schedule.json'), 'utf8'));
+  const mmdd = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' }).slice(5); // MM-DD
+  const active = schedule.find(s => mmdd >= s.start && mmdd <= s.end);
+  res.json({ skin: active?.name ?? null });
+});
 
 function parseCoordinate(value, fallback) {
   const num = Number.parseFloat(value);
