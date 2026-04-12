@@ -1,12 +1,12 @@
 /* ─── Reset & Variables ────────────────────────────────────────────────────── */
 :root {
-  --primary:   #1565C0;
-  --accent:    #0288D1;
-  --card-bg:   #ffffff;
-  --shadow:    0 4px 16px rgba(2,136,209,0.14);
-  --radius:    14px;
-  --text-dark: #0D47A1;
-  --text-mid:  #455A64;
+  --primary:   #5C3A1E;
+  --accent:    #8B6914;
+  --card-bg:   #F5EDD0;
+  --shadow:    0 4px 16px rgba(92,58,0,0.18);
+  --radius:    12px;
+  --text-dark: #3D2400;
+  --text-mid:  #7A5C30;
   --gap:       8px;
 
   /* ── Typography scale ── */
@@ -29,7 +29,7 @@
 
 body {
   font-family: 'Heebo', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-  background: linear-gradient(160deg, #E3F2FD 0%, #E0F7FA 55%, #B3E5FC 100%);
+  background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%);
   min-height: 100vh;
   color: var(--text-dark);
   overflow-x: hidden;
@@ -40,7 +40,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(13,71,161,0.82);
+  background: rgba(92,58,30,0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -63,11 +63,11 @@ body {
 
 /* ─── Header / Logo ──────────────────────────────────────────────────────────── */
 header {
-  background: linear-gradient(135deg, #0D47A1 0%, #0288D1 60%, #00ACC1 100%);
+  background: linear-gradient(135deg, #6B4E1A 0%, #8B6914 50%, #C8A440 100%);
   color: white;
   padding: 36px 20px 36px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(13,71,161,0.35);
+  box-shadow: 0 4px 20px rgba(92,58,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +99,7 @@ header {
 /* ─── Drum day picker ────────────────────────────────────────────────────────── */
 .drum-wrapper {
   position: relative;
-  background: linear-gradient(135deg, #0D47A1 0%, #0277BD 60%, #0097A7 100%);
+  background: linear-gradient(135deg, #6B4E1A 0%, #9A7538 60%, #B8943E 100%);
   overflow: hidden;
   padding-bottom: 10px;
 }
@@ -167,11 +167,11 @@ header {
 }
 .drum-fade-left {
   left: 0;
-  background: linear-gradient(to right, rgba(13,71,161,0.88) 0%, transparent 100%);
+  background: linear-gradient(to right, rgba(107,78,26,0.88) 0%, transparent 100%);
 }
 .drum-fade-right {
   right: 0;
-  background: linear-gradient(to left, rgba(13,71,161,0.88) 0%, transparent 100%);
+  background: linear-gradient(to left, rgba(107,78,26,0.88) 0%, transparent 100%);
 }
 
 .drum-ring {
@@ -283,7 +283,7 @@ header {
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #0D47A1;
+  color: #3D2400;
   letter-spacing: 0.3px;
   direction: ltr;
   unicode-bidi: isolate;
@@ -321,7 +321,7 @@ header {
   z-index: 2;
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #0D47A1;
+  color: #3D2400;
   letter-spacing: 0.3px;
   text-align: center;
   padding: 2px 8px;
@@ -335,7 +335,7 @@ header {
 .sea-temp {
   font-size: var(--font-xs);
   font-weight: var(--w-mid);
-  color: #01579B;
+  color: #5C3A1E;
   background: rgba(255,255,255,0.55);
 }
 
@@ -378,7 +378,7 @@ header {
 .wd-pill {
   font-size: var(--font-sm);
   font-weight: var(--w-bold);
-  color: #0D47A1;
+  color: #3D2400;
   letter-spacing: 0.3px;
   padding: 3px 12px;
   background: rgba(255,255,255,0.78);
@@ -436,12 +436,62 @@ header {
   unicode-bidi: isolate;
 }
 
-/* Photo backgrounds — zoom in to crop white image borders */
+/* Israeli-themed backgrounds — sun rise over Galilee hills, sunset over Jerusalem stone */
 .sunrise-tile {
-  background: #f5c97a url('Smiling%20sun%20over%20cheerful%20beach.png') center center / 150% auto no-repeat;
+  background: linear-gradient(180deg,
+    #87CEEB 0%, #AEE0F0 25%,
+    #8DC87A 50%, #6BAF52 70%,
+    #C8A440 85%, #8B6914 100%);
 }
 .sunset-tile {
-  background: #e07030 url('Smiling%20sunset%20over%20tropical%20beach.png') center center / 150% auto no-repeat;
+  background: linear-gradient(180deg,
+    #C0392B 0%, #E05C20 20%,
+    #F0A030 45%, #C8A440 65%,
+    #A07828 80%, #6B4E1A 100%);
+}
+
+/* ─── Blue-and-white bunting above sun row ────────────────────────────────── */
+.sun-row {
+  position: relative;
+  margin-top: 10px;
+}
+.sun-row::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 0; right: 0;
+  height: 14px;
+  z-index: 5;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #003DA5 0px, #003DA5 18px,
+      white   18px, white   36px
+    );
+  clip-path: polygon(
+    0 0,9px 100%,18px 0,
+    36px 0,45px 100%,54px 0,
+    72px 0,81px 100%,90px 0,
+    108px 0,117px 100%,126px 0,
+    144px 0,153px 100%,162px 0,
+    180px 0,189px 100%,198px 0,
+    216px 0,225px 100%,234px 0,
+    252px 0,261px 100%,270px 0,
+    288px 0,297px 100%,306px 0,
+    324px 0,333px 100%,342px 0,
+    360px 0,369px 100%,378px 0,
+    396px 0,405px 100%,414px 0,
+    432px 0,441px 100%,450px 0,
+    468px 0,477px 100%,486px 0,
+    504px 0,513px 100%,522px 0,
+    540px 0,549px 100%,558px 0,
+    576px 0,585px 100%,594px 0,
+    612px 0,621px 100%,630px 0,
+    648px 0,657px 100%,666px 0,
+    684px 0,693px 100%,702px 0,
+    720px 0,729px 100%,738px 0,
+    100% 0, 100% 0
+  );
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */

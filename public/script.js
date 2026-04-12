@@ -320,11 +320,11 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
   });
 
   function frame() {
-    // 1 — Sky gradient background
+    // 1 — Sky gradient background (warm sandy/desert tones)
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   'rgba(178,216,248,1)');
-    bg.addColorStop(0.6, 'rgba(213,236,252,1)');
-    bg.addColorStop(1,   'rgba(236,248,255,1)');
+    bg.addColorStop(0,   'rgba(245,227,170,1)');
+    bg.addColorStop(0.6, 'rgba(252,240,200,1)');
+    bg.addColorStop(1,   'rgba(255,248,220,1)');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -392,8 +392,8 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
       }
       ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
       const grad = ctx.createLinearGradient(0, yBase-amp, 0, H);
-      grad.addColorStop(0, `rgba(41,182,246,${opacity})`);
-      grad.addColorStop(1, `rgba(1,87,155,${opacity*0.45})`);
+      grad.addColorStop(0, `rgba(30,160,210,${opacity})`);
+      grad.addColorStop(1, `rgba(5,100,140,${opacity*0.45})`);
       ctx.fillStyle = grad;
       ctx.fill();
 
