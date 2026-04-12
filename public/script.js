@@ -320,13 +320,8 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
   });
 
   function frame() {
-    // 1 — Sky gradient background (warm sandy/desert tones)
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   'rgba(245,227,170,1)');
-    bg.addColorStop(0.6, 'rgba(252,240,200,1)');
-    bg.addColorStop(1,   'rgba(255,248,220,1)');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    // Background is the illustrated wind-row image — just clear the canvas
+    ctx.clearRect(0, 0, W, H);
 
     // 2 — Wind streak particles
     particles.forEach(p => {

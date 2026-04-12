@@ -63,7 +63,7 @@ body {
 
 /* ─── Header / Logo ──────────────────────────────────────────────────────────── */
 header {
-  background: linear-gradient(135deg, #6B4E1A 0%, #8B6914 50%, #C8A440 100%);
+  background: url('/skin/header-bg.png') center center / cover no-repeat;
   color: white;
   padding: 36px 20px 36px;
   text-align: center;
@@ -99,7 +99,7 @@ header {
 /* ─── Drum day picker ────────────────────────────────────────────────────────── */
 .drum-wrapper {
   position: relative;
-  background: linear-gradient(135deg, #6B4E1A 0%, #9A7538 60%, #B8943E 100%);
+  background: url('/skin/drum-bg.png') center top / cover no-repeat;
   overflow: hidden;
   padding-bottom: 10px;
 }
@@ -167,11 +167,11 @@ header {
 }
 .drum-fade-left {
   left: 0;
-  background: linear-gradient(to right, rgba(107,78,26,0.88) 0%, transparent 100%);
+  background: linear-gradient(to right, rgba(180,140,60,0.9) 0%, transparent 100%);
 }
 .drum-fade-right {
   right: 0;
-  background: linear-gradient(to left, rgba(107,78,26,0.88) 0%, transparent 100%);
+  background: linear-gradient(to left, rgba(180,140,60,0.9) 0%, transparent 100%);
 }
 
 .drum-ring {
@@ -261,6 +261,7 @@ header {
 .wx-cell {
   position: relative;
   overflow: hidden;
+  background: url('/skin/weather-card-bg.png') center center / cover no-repeat;
 }
 
 /* Lottie: anchored to dead centre, then scaled up to fill tile */
@@ -304,7 +305,12 @@ header {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  background: url('/skin/wave-row-bg.png') center center / 300% 100% no-repeat;
 }
+/* Each cell shows a different third of the panoramic wave image */
+#waveRow .mx-cell:nth-child(1) { background-position: right center; }
+#waveRow .mx-cell:nth-child(2) { background-position: center center; }
+#waveRow .mx-cell:nth-child(3) { background-position: left center; }
 
 /* Canvas fills cell as animated background */
 .wave-cvs {
@@ -343,7 +349,11 @@ header {
 .wd-cell {
   position: relative;
   overflow: hidden;
+  background: url('/skin/wind-row-bg.png') center center / 300% 100% no-repeat;
 }
+#windRow .mx-cell:nth-child(1) { background-position: right center; }
+#windRow .mx-cell:nth-child(2) { background-position: center center; }
+#windRow .mx-cell:nth-child(3) { background-position: left center; }
 
 /* Schematic wind canvas fills the full tile */
 .wind-cvs {
@@ -436,21 +446,15 @@ header {
   unicode-bidi: isolate;
 }
 
-/* Israeli-themed backgrounds — sun rise over Galilee hills, sunset over Jerusalem stone */
+/* Illustrated sun tiles from sliced skin artwork */
 .sunrise-tile {
-  background: linear-gradient(180deg,
-    #87CEEB 0%, #AEE0F0 25%,
-    #8DC87A 50%, #6BAF52 70%,
-    #C8A440 85%, #8B6914 100%);
+  background: url('/skin/sunrise-bg.png') center center / cover no-repeat;
 }
 .sunset-tile {
-  background: linear-gradient(180deg,
-    #C0392B 0%, #E05C20 20%,
-    #F0A030 45%, #C8A440 65%,
-    #A07828 80%, #6B4E1A 100%);
+  background: url('/skin/sunset-bg.png') center center / cover no-repeat;
 }
 
-/* ─── Blue-and-white bunting above sun row ────────────────────────────────── */
+/* ─── Bunting strip above sun row (real artwork slice) ───────────────────── */
 .sun-row {
   position: relative;
   margin-top: 10px;
@@ -458,40 +462,11 @@ header {
 .sun-row::before {
   content: '';
   position: absolute;
-  top: -14px;
+  top: -22px;
   left: 0; right: 0;
-  height: 14px;
+  height: 22px;
   z-index: 5;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      #003DA5 0px, #003DA5 18px,
-      white   18px, white   36px
-    );
-  clip-path: polygon(
-    0 0,9px 100%,18px 0,
-    36px 0,45px 100%,54px 0,
-    72px 0,81px 100%,90px 0,
-    108px 0,117px 100%,126px 0,
-    144px 0,153px 100%,162px 0,
-    180px 0,189px 100%,198px 0,
-    216px 0,225px 100%,234px 0,
-    252px 0,261px 100%,270px 0,
-    288px 0,297px 100%,306px 0,
-    324px 0,333px 100%,342px 0,
-    360px 0,369px 100%,378px 0,
-    396px 0,405px 100%,414px 0,
-    432px 0,441px 100%,450px 0,
-    468px 0,477px 100%,486px 0,
-    504px 0,513px 100%,522px 0,
-    540px 0,549px 100%,558px 0,
-    576px 0,585px 100%,594px 0,
-    612px 0,621px 100%,630px 0,
-    648px 0,657px 100%,666px 0,
-    684px 0,693px 100%,702px 0,
-    720px 0,729px 100%,738px 0,
-    100% 0, 100% 0
-  );
+  background: url('/skin/bunting-bg.png') center / cover no-repeat;
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */
