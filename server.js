@@ -22,8 +22,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/active-skin', (req, res) => {
   const schedule = JSON.parse(fs.readFileSync(path.join(__dirname, 'skin-schedule.json'), 'utf8'));
   const mmdd = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(5); // MM-DD (sv-SE always gives YYYY-MM-DD)
-  const active = schedule.find(s => mmdd >= s.start && mmdd <= s.end);
-  res.json({ skin: active?.name ?? null });
+  const active = schedule.find(s => s.name !== 'default' && mmdd >= s.start && mmdd <= s.end);
+  res.json({ skin: active?.name ?? 'default' });
 });
 
 function parseCoordinate(value, fallback) {

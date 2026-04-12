@@ -71,8 +71,9 @@
       border-radius: 20px;
       letter-spacing: 0.5px;
     }
-    .badge-active { background: #14532d; color: #4ade80; }
+    .badge-active    { background: #14532d; color: #4ade80; }
     .badge-scheduled { background: #1e3a5f; color: #60a5fa; }
+    .badge-default   { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
 
     .date-row {
       display: flex;
@@ -212,24 +213,32 @@
     const grid = document.getElementById('skinGrid');
     grid.innerHTML = '';
 
-    skins.forEach(name => {
-      const entry = getEntry(name);
-      const active = entry && isActiveNow(entry);
-      const scheduled = entry && !active;
+    // Pin default first, then the rest
+    const ordered = ['default', ...skins.filter(s => s !== 'default')];
+
+    ordered.forEach(name => {
+      const isDefault = name === 'default';
+      const entry  = getEntry(name);
+      const active = isDefault
+        ? !schedule.some(s => s.name !== 'default' && isActiveNow(s))
+        : (entry && isActiveNow(entry));
+      const scheduled = !isDefault && entry && !active;
 
       const card = document.createElement('div');
       card.className = 'skin-card' + (active ? ' active-now' : scheduled ? ' scheduled' : '');
       card.innerHTML = `
         <img class="skin-thumb"
              src="/skins/${name}/skin/header-bg.png"
-             onerror="this.style.background='#1e293b'"
+             onerror="this.style.background='#0c2a4a;background-image:linear-gradient(135deg,#0D47A1,#0288D1)'"
              alt="${name}">
         <div class="skin-body">
           <div class="skin-name">
-            ${name}
+            ${isDefault ? 'Default (Ocean Blue)' : name}
             ${active    ? '<span class="badge badge-active">● LIVE NOW</span>' : ''}
             ${scheduled ? '<span class="badge badge-scheduled">● SCHEDULED</span>' : ''}
+            ${isDefault && !active ? '<span class="badge badge-default">fallback</span>' : ''}
           </div>
+          ${isDefault ? '<p style="font-size:0.75rem;color:#64748b;margin-bottom:12px">Always shown when no other skin is active.</p>' : `
           <div class="date-row">
             <label>
               From
@@ -251,7 +260,7 @@
                  <button class="btn-remove" onclick="removeCard('${name}')">Remove</button>`
               : `<button class="btn-add" onclick="addCard('${name}')">Add to schedule</button>`
             }
-          </div>
+          </div>`}
         </div>
       `;
       grid.appendChild(card);
