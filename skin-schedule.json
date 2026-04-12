@@ -16,5 +16,11 @@
     "label": "grungeskin",
     "start": "12-12",
     "end": "12-13"
+  },
+  {
+    "name": "brawlstarsskin",
+    "label": "brawlstarsskin",
+    "start": "04-12",
+    "end": "04-13"
   }
 ]
