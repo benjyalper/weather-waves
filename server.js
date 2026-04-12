@@ -11,6 +11,9 @@ const path = require('path');
 const zlib = require('zlib');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const multer = require('multer');
+const Jimp = require('jimp');
+const archiver = require('archiver');
 
 require('./generate-icon');
 
@@ -182,6 +185,112 @@ app.post('/api/schedule', express.json(), (req, res) => {
   } catch (err) {
     // Save succeeded even if git push failed
     res.json({ ok: true, pushed: false, gitError: err.message });
+  }
+});
+
+// ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
+const SKIN_SLICES = [
+  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 370 },
+  { file: 'drum-bg.png',         left: 0,   top: 370,  width: 1024, height: 120 },
+  { file: 'weather-card-bg.png', left: 340, top: 580,  width: 345,  height: 185 },
+  { file: 'wave-row-bg.png',     left: 0,   top: 770,  width: 1024, height: 210 },
+  { file: 'wind-row-bg.png',     left: 0,   top: 980,  width: 1024, height: 105 },
+  { file: 'bunting-bg.png',      left: 0,   top: 1085, width: 1024, height: 50  },
+  { file: 'sunset-bg.png',       left: 0,   top: 1135, width: 512,  height: 155 },
+  { file: 'sunrise-bg.png',      left: 512, top: 1135, width: 512,  height: 155 },
+];
+
+function skinCSS(name) {
+  return `/* ${name} skin — auto-generated */
+:root {
+  --primary: #5C3A1E;
+  --accent: #8B6914;
+  --card-bg: #F5EDD0;
+  --shadow: 0 4px 16px rgba(92,58,0,0.18);
+  --radius: 12px;
+  --text-dark: #3D2400;
+  --text-mid: #7A5C30;
+}
+body { background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%); }
+header { background: url('/skins/${name}/skin/header-bg.png') center center / cover no-repeat; }
+.drum-wrapper { background: url('/skins/${name}/skin/drum-bg.png') center top / cover no-repeat; }
+.wx-cell { background: url('/skins/${name}/skin/weather-card-bg.png') center center / cover no-repeat; }
+.wv-cell { background: url('/skins/${name}/skin/wave-row-bg.png') center center / 300% 100% no-repeat; }
+#waveRow .mx-cell:nth-child(1) { background-position: right center; }
+#waveRow .mx-cell:nth-child(2) { background-position: center center; }
+#waveRow .mx-cell:nth-child(3) { background-position: left center; }
+.wd-cell { background: url('/skins/${name}/skin/wind-row-bg.png') center center / 300% 100% no-repeat; }
+.drum-item { color: rgba(0,56,168,0.55); }
+.drum-item.active { color: #002FA7; }
+.drum-ring { border: 2px solid rgba(0,56,168,0.65); }
+.sunrise-tile { background: url('/skins/${name}/skin/sunrise-bg.png') center center / cover no-repeat; }
+.sunset-tile { background: url('/skins/${name}/skin/sunset-bg.png') center center / cover no-repeat; }
+.sun-row { position: relative; margin-top: 10px; }
+.sun-row::before {
+  content: '';
+  position: absolute;
+  top: -22px; left: 0; right: 0;
+  height: 22px;
+  z-index: 5;
+  background: url('/skins/${name}/skin/bunting-bg.png') center / cover no-repeat;
+}
+`;
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'image/png') cb(null, true);
+    else cb(new Error('Only PNG files are accepted'));
+  }
+});
+
+app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
+  try {
+    const skinName = (req.body.name || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    if (!skinName) return res.status(400).json({ error: 'Skin name is required' });
+    if (!req.file)  return res.status(400).json({ error: 'PNG file is required' });
+
+    // Validate dimensions
+    const src = await Jimp.read(req.file.buffer);
+    if (src.bitmap.width !== 1024 || src.bitmap.height !== 1536) {
+      return res.status(400).json({
+        error: `Image must be exactly 1024×1536 px. Got ${src.bitmap.width}×${src.bitmap.height}.`
+      });
+    }
+
+    // Create skin dirs
+    const skinDir = path.join(SKINS_DIR, skinName);
+    const assetDir = path.join(skinDir, 'skin');
+    fs.mkdirSync(assetDir, { recursive: true });
+
+    // Slice and save
+    await Promise.all(SKIN_SLICES.map(s => {
+      const crop = src.clone().crop(s.left, s.top, s.width, s.height);
+      return crop.writeAsync(path.join(assetDir, s.file));
+    }));
+
+    // Write style.css
+    fs.writeFileSync(path.join(skinDir, 'style.css'), skinCSS(skinName));
+
+    // Build zip in memory and stream it back
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${skinName}.zip"`);
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+    archive.on('error', err => { throw err; });
+    archive.pipe(res);
+
+    for (const s of SKIN_SLICES) {
+      archive.file(path.join(assetDir, s.file), { name: `skin/${s.file}` });
+    }
+    archive.file(path.join(skinDir, 'style.css'), { name: 'style.css' });
+
+    await archive.finalize();
+  } catch (err) {
+    console.error('[upload-skin]', err.message);
+    if (!res.headersSent) res.status(500).json({ error: err.message });
   }
 });
 
