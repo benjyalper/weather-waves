@@ -307,10 +307,12 @@
         body: JSON.stringify(valid, null, 2)
       });
       if (!r.ok) throw new Error('Server error');
+      const result = await r.json();
       schedule = valid;
       dirty = false;
-      setStatus('Saved!', 'ok');
-      setTimeout(() => setStatus('No unsaved changes.', ''), 3000);
+      const msg = result.pushed ? 'Saved & pushed to dev!' : 'Saved locally (git push failed)';
+      setStatus(msg, result.pushed ? 'ok' : 'error');
+      setTimeout(() => setStatus('No unsaved changes.', ''), 4000);
       renderGrid();
     } catch (e) {
       setStatus('Save failed: ' + e.message, 'error');

@@ -10,6 +10,7 @@ const https = require('https');
 const path = require('path');
 const zlib = require('zlib');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 require('./generate-icon');
 
@@ -172,7 +173,16 @@ app.get('/api/schedule', (req, res) => {
 
 app.post('/api/schedule', express.json(), (req, res) => {
   fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
-  res.json({ ok: true });
+  try {
+    execSync('git add skin-schedule.json && git commit -m "Update skin schedule via admin" && git push origin dev', {
+      cwd: __dirname,
+      stdio: 'pipe'
+    });
+    res.json({ ok: true, pushed: true });
+  } catch (err) {
+    // Save succeeded even if git push failed
+    res.json({ ok: true, pushed: false, gitError: err.message });
+  }
 });
 
 app.listen(PORT, () => {
