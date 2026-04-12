@@ -1,0 +1,26 @@
+name: Skin scheduled deploy
+
+on:
+  schedule:
+    # Midnight UTC April 22 = 03:00 Israel time (UTC+3)
+    - cron: '0 0 22 4 *'
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge dev → main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git merge origin/dev --no-ff -m "🗓️ Auto-deploy: Yom HaAtzmaut skin (22/4)"
+          git push origin main
