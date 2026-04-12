@@ -177,13 +177,13 @@ app.get('/api/schedule', (req, res) => {
 app.post('/api/schedule', express.json(), (req, res) => {
   fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
   try {
-    execSync('git add skin-schedule.json && git commit -m "Update skin schedule via admin" && git push origin dev', {
-      cwd: __dirname,
-      stdio: 'pipe'
-    });
+    execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
+    try {
+      execSync('git commit -m "Update skin schedule via admin"', { cwd: __dirname, stdio: 'pipe' });
+    } catch (_) { /* nothing to commit — that's fine, still push */ }
+    execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
     res.json({ ok: true, pushed: true });
   } catch (err) {
-    // Save succeeded even if git push failed
     res.json({ ok: true, pushed: false, gitError: err.message });
   }
 });
