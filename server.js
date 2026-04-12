@@ -155,6 +155,26 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── Admin API ────────────────────────────────────────────────────────────────
+const SCHEDULE_PATH = path.join(__dirname, 'skin-schedule.json');
+const SKINS_DIR     = path.join(__dirname, 'public', 'skins');
+
+app.get('/api/skins', (req, res) => {
+  const dirs = fs.readdirSync(SKINS_DIR).filter(d =>
+    fs.statSync(path.join(SKINS_DIR, d)).isDirectory()
+  );
+  res.json(dirs);
+});
+
+app.get('/api/schedule', (req, res) => {
+  res.json(JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8')));
+});
+
+app.post('/api/schedule', express.json(), (req, res) => {
+  fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
+  res.json({ ok: true });
+});
+
 app.listen(PORT, () => {
   console.log(`Weather + Waves running at http://localhost:${PORT}`);
 });
