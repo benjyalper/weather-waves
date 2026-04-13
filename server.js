@@ -214,6 +214,7 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
     const filesToSync = [
       'server.js',
       'package.json',
+      'package-lock.json',
       path.join('public', 'index.html'),
       path.join('public', 'style.css'),
       path.join('public', 'script.js'),
@@ -280,6 +281,7 @@ app.post('/api/revert-main-to-default', (req, res) => {
     const filesToSync = [
       'server.js',
       'package.json',
+      'package-lock.json',
       path.join('public', 'index.html'),
       path.join('public', 'style.css'),
       path.join('public', 'script.js'),
