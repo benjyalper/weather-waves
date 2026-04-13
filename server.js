@@ -274,24 +274,40 @@ app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
     // Write style.css
     fs.writeFileSync(path.join(skinDir, 'style.css'), skinCSS(skinName));
 
-    // Build zip in memory and stream it back
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${skinName}.zip"`);
-
-    const archive = archiver('zip', { zlib: { level: 6 } });
-    archive.on('error', err => { throw err; });
-    archive.pipe(res);
-
-    for (const s of SKIN_SLICES) {
-      archive.file(path.join(assetDir, s.file), { name: `skin/${s.file}` });
+    // Git push
+    let pushed = false;
+    let gitError = null;
+    try {
+      execSync(`git add public/skins/${skinName}`, { cwd: __dirname, stdio: 'pipe' });
+      execSync(`git commit -m "Add skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
+      execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
+      pushed = true;
+    } catch (e) {
+      gitError = e.stderr?.toString() || e.message;
     }
-    archive.file(path.join(skinDir, 'style.css'), { name: 'style.css' });
 
-    await archive.finalize();
+    res.json({ ok: true, name: skinName, pushed, gitError });
   } catch (err) {
     console.error('[upload-skin]', err.message);
-    if (!res.headersSent) res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
+});
+
+app.get('/api/download-skin/:name', (req, res) => {
+  const skinName = req.params.name.replace(/[^a-z0-9-]/g, '');
+  const skinDir  = path.join(SKINS_DIR, skinName);
+  const assetDir = path.join(skinDir, 'skin');
+  if (!fs.existsSync(assetDir)) return res.status(404).json({ error: 'Skin not found' });
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${skinName}.zip"`);
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', err => { if (!res.headersSent) res.status(500).end(); });
+  archive.pipe(res);
+  archive.directory(assetDir, 'skin');
+  archive.file(path.join(skinDir, 'style.css'), { name: 'style.css' });
+  archive.finalize();
 });
 
 app.listen(PORT, () => {
