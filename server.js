@@ -242,6 +242,34 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
   }
 });
 
+app.post('/api/revert-main-to-default', (req, res) => {
+  const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+  try {
+    if (fs.existsSync(WORKTREE)) {
+      execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+    }
+    execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
+    execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
+
+    // Write an empty schedule so no skin is active → default ocean shows
+    const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
+    fs.writeFileSync(mainSchedulePath, '[]');
+
+    execSync(`git add skin-schedule.json`, { cwd: WORKTREE, stdio: 'pipe' });
+    try {
+      execSync(`git commit -m "Revert main to default ocean skin"`, { cwd: WORKTREE, stdio: 'pipe' });
+    } catch (_) { /* nothing to commit */ }
+    execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
+
+    execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+    res.json({ ok: true });
+  } catch (err) {
+    try { execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
+    console.error('[revert-main]', err.stderr?.toString() || err.message);
+    res.status(500).json({ error: err.stderr?.toString() || err.message });
+  }
+});
+
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
 const SKIN_SLICES = [
   { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 370 },
