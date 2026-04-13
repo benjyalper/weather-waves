@@ -210,7 +210,32 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
 
-    // Copy skin folder into worktree
+    // Copy skin infrastructure files (server, frontend, default skin)
+    const filesToSync = [
+      'server.js',
+      'package.json',
+      path.join('public', 'index.html'),
+      path.join('public', 'style.css'),
+      path.join('public', 'script.js'),
+    ];
+    for (const f of filesToSync) {
+      const src = path.join(__dirname, f);
+      const dst = path.join(WORKTREE, f);
+      if (fs.existsSync(src)) {
+        fs.mkdirSync(path.dirname(dst), { recursive: true });
+        fs.copyFileSync(src, dst);
+      }
+    }
+
+    // Copy default skin folder
+    const defaultSrc = path.join(SKINS_DIR, 'default');
+    const defaultDst = path.join(WORKTREE, 'public', 'skins', 'default');
+    if (fs.existsSync(defaultSrc)) {
+      fs.mkdirSync(defaultDst, { recursive: true });
+      execSync(`xcopy /E /I /Y "${defaultSrc}" "${defaultDst}"`, { stdio: 'pipe' });
+    }
+
+    // Copy active skin folder into worktree
     const skinDest = path.join(WORKTREE, 'public', 'skins', skinName);
     fs.mkdirSync(skinDest, { recursive: true });
     execSync(`xcopy /E /I /Y "${skinSrc}" "${skinDest}"`, { stdio: 'pipe' });
@@ -250,6 +275,23 @@ app.post('/api/revert-main-to-default', (req, res) => {
     }
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
+
+    // Sync infrastructure files so the skin system is present on main
+    const filesToSync = [
+      'server.js',
+      'package.json',
+      path.join('public', 'index.html'),
+      path.join('public', 'style.css'),
+      path.join('public', 'script.js'),
+    ];
+    for (const f of filesToSync) {
+      const src = path.join(__dirname, f);
+      const dst = path.join(WORKTREE, f);
+      if (fs.existsSync(src)) {
+        fs.mkdirSync(path.dirname(dst), { recursive: true });
+        fs.copyFileSync(src, dst);
+      }
+    }
 
     // Write an empty schedule so no skin is active → default ocean shows
     const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
