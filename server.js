@@ -188,6 +188,60 @@ app.post('/api/schedule', express.json(), (req, res) => {
   }
 });
 
+app.post('/api/deploy-to-main', express.json(), (req, res) => {
+  const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+  try {
+    // Find the currently active skin + its schedule entry
+    const schedule = JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8'));
+    const mmdd     = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(5);
+    const active   = schedule.find(s => s.name !== 'default' && mmdd >= s.start && mmdd <= s.end);
+    if (!active) return res.status(400).json({ error: 'No skin is currently active on dev.' });
+
+    const skinName = active.name;
+    const skinSrc  = path.join(SKINS_DIR, skinName);
+    if (!fs.existsSync(skinSrc)) return res.status(400).json({ error: `Skin folder not found: ${skinName}` });
+
+    // Clean up any leftover worktree
+    if (fs.existsSync(WORKTREE)) {
+      execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+    }
+
+    // Create isolated worktree on main
+    execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
+    execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
+
+    // Copy skin folder into worktree
+    const skinDest = path.join(WORKTREE, 'public', 'skins', skinName);
+    fs.mkdirSync(skinDest, { recursive: true });
+    execSync(`xcopy /E /I /Y "${skinSrc}" "${skinDest}"`, { stdio: 'pipe' });
+
+    // Write skin-schedule.json on main with only this skin's entry
+    const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
+    let mainSchedule = [];
+    if (fs.existsSync(mainSchedulePath)) {
+      try { mainSchedule = JSON.parse(fs.readFileSync(mainSchedulePath, 'utf8')); } catch (_) {}
+    }
+    // Upsert this skin's entry, keep others
+    const idx = mainSchedule.findIndex(s => s.name === skinName);
+    if (idx >= 0) mainSchedule[idx] = active; else mainSchedule.push(active);
+    fs.writeFileSync(mainSchedulePath, JSON.stringify(mainSchedule, null, 2));
+
+    // Commit and push from the worktree
+    execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
+    execSync(`git commit -m "Deploy skin: ${skinName} (${active.start} → ${active.end})"`, { cwd: WORKTREE, stdio: 'pipe' });
+    execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
+
+    // Clean up
+    execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+
+    res.json({ ok: true, skin: skinName });
+  } catch (err) {
+    try { execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
+    console.error('[deploy-to-main]', err.stderr?.toString() || err.message);
+    res.status(500).json({ error: err.stderr?.toString() || err.message });
+  }
+});
+
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
 const SKIN_SLICES = [
   { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 370 },
