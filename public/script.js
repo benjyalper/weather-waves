@@ -320,8 +320,17 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
   });
 
   function frame() {
-    // Background is the illustrated wind-row image — just clear the canvas
-    ctx.clearRect(0, 0, W, H);
+    // Default skin: paint the blue sky gradient; illustrated skins: clear to transparent
+    if ((window.ACTIVE_SKIN || 'default') === 'default') {
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0,   'rgba(178,216,248,1)');
+      bg.addColorStop(0.6, 'rgba(213,236,252,1)');
+      bg.addColorStop(1,   'rgba(236,248,255,1)');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      ctx.clearRect(0, 0, W, H);
+    }
 
     // 2 — Wind streak particles
     particles.forEach(p => {

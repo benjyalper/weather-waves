@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="style.css" />
   <script>
     fetch('/api/active-skin').then(r => r.json()).then(({ skin }) => {
+      window.ACTIVE_SKIN = skin || 'default';
       if (skin) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
