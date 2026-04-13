@@ -320,13 +320,17 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
   });
 
   function frame() {
-    // 1 — Sky gradient background
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   'rgba(178,216,248,1)');
-    bg.addColorStop(0.6, 'rgba(213,236,252,1)');
-    bg.addColorStop(1,   'rgba(236,248,255,1)');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    // Default skin: paint the blue sky gradient; illustrated skins: clear to transparent
+    if ((window.ACTIVE_SKIN || 'default') === 'default') {
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0,   'rgba(178,216,248,1)');
+      bg.addColorStop(0.6, 'rgba(213,236,252,1)');
+      bg.addColorStop(1,   'rgba(236,248,255,1)');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      ctx.clearRect(0, 0, W, H);
+    }
 
     // 2 — Wind streak particles
     particles.forEach(p => {
@@ -392,8 +396,8 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
       }
       ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
       const grad = ctx.createLinearGradient(0, yBase-amp, 0, H);
-      grad.addColorStop(0, `rgba(41,182,246,${opacity})`);
-      grad.addColorStop(1, `rgba(1,87,155,${opacity*0.45})`);
+      grad.addColorStop(0, `rgba(30,160,210,${opacity})`);
+      grad.addColorStop(1, `rgba(5,100,140,${opacity*0.45})`);
       ctx.fillStyle = grad;
       ctx.fill();
 
@@ -464,7 +468,7 @@ function buildDrum(daily) {
     const dow     = date.getDay();
     const letter  = HEBREW_DAYS[dow];
     const isToday = dateStr === todayStr;
-    const cat     = daily ? getWeatherCategory(daily.weathercode[i]) : 'cloudy';
+    const cat     = daily ? getWeatherCategory(daily.weather_code[i]) : 'cloudy';
     const emoji   = WEATHER_EMOJI[cat];
     const maxT    = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
 
@@ -565,7 +569,7 @@ function renderDay(dayIdx) {
     // Weather
     const wIdx = findHourIndex(wHourly.time, dateStr, hour);
     const temp = wIdx !== -1 ? Math.round(wHourly.temperature_2m[wIdx]) : null;
-    const code = wIdx !== -1 ? wHourly.weathercode[wIdx] : null;
+    const code = wIdx !== -1 ? wHourly.weather_code[wIdx] : null;
     const wxCat = code != null ? getWeatherCategory(code) : 'cloudy';
     const wxCell = document.getElementById(`wx${i}`);
     wxCell.className = `mx-cell wx-cell wx-${wxCat}`;

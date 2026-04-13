@@ -9,11 +9,22 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="אל הים" />
-  <meta name="theme-color" content="#0D47A1" />
+  <meta name="theme-color" content="#8B6914" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <script>
+    fetch('/api/active-skin').then(r => r.json()).then(({ skin }) => {
+      window.ACTIVE_SKIN = skin || 'default';
+      if (skin) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `/skins/${skin}/style.css`;
+        document.head.appendChild(link);
+      }
+    });
+  </script>
 </head>
 <body>
 
