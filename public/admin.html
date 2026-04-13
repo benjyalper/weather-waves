@@ -268,12 +268,6 @@
       const pushMsg = result.pushed ? 'pushed to dev ✓' : 'saved locally (git push failed)';
       setUploadStatus(`Skin "${name}" sliced & ${pushMsg}`, result.pushed ? 'ok' : 'error');
 
-      // Trigger zip download
-      const a = document.createElement('a');
-      a.href = `/api/download-skin/${name}`;
-      a.download = `${name}.zip`;
-      a.click();
-
       // Refresh the schedule grid so new skin appears
       refreshSkins();
     } catch (e) {
