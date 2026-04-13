@@ -2,8 +2,8 @@
   {
     "name": "tropical",
     "label": "tropical",
-    "start": "04-12",
-    "end": "05-17"
+    "start": "04-17",
+    "end": "05-19"
   },
   {
     "name": "yom-haatzmaut",
@@ -16,5 +16,11 @@
     "label": "brawlstarsskin",
     "start": "05-12",
     "end": "04-13"
+  },
+  {
+    "name": "japanskin",
+    "label": "japanskin",
+    "start": "04-13",
+    "end": "04-14"
   }
 ]
