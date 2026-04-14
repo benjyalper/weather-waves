@@ -563,62 +563,59 @@ function renderDay(dayIdx) {
   document.getElementById('sunriseVal').textContent = riseRaw.slice(11,16) || '--:--';
   document.getElementById('sunsetVal').textContent  = setRaw.slice(11,16)  || '--:--';
 
-  // ── Sun tile adaptive text colour (pixel-sample the bg image) ──
-  ['sunrise-tile', 'sunset-tile'].forEach(cls => {
-    const tile = document.querySelector('.' + cls);
-    if (!tile) return;
-    const style   = getComputedStyle(tile);
+  // ── Sun tile adaptive text colour — both tiles use sunset's image as reference ──
+  const sunsetTile  = document.querySelector('.sunset-tile');
+  const sunriseTile = document.querySelector('.sunrise-tile');
+  if (sunsetTile) {
+    const style   = getComputedStyle(sunsetTile);
     const bgImage = style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
-    if (!bgImage) return;
-    const imgSrc = bgImage[1];
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const cvs = document.createElement('canvas');
-      const rect = tile.getBoundingClientRect();
-      // Sample the bottom-centre region where text sits
-      const sampleW = Math.max(1, Math.round(rect.width  * 0.6));
-      const sampleH = Math.max(1, Math.round(rect.height * 0.35));
-      cvs.width  = sampleW;
-      cvs.height = sampleH;
-      const ctx2 = cvs.getContext('2d');
-      // Draw the portion of the image that maps to the bottom-centre of the tile
-      // background-size: 150% auto → scale factor ~1.5
-      const scale    = 1.5;
-      const srcW     = img.naturalWidth;
-      const srcH     = img.naturalHeight;
-      const drawW    = srcW * scale;
-      const drawH    = srcH * scale;
-      const offsetX  = (rect.width  - drawW) / 2;  // center x
-      const offsetY  = (rect.height - drawH) / 2;  // center y
-      // bottom region starts at (rect.height - sampleH) in tile space
-      const srcStartY = (rect.height - sampleH - offsetY) / scale;
-      const srcStartX = (rect.width  / 2 - sampleW / 2 - offsetX) / scale;
-      ctx2.drawImage(img,
-        Math.max(0, srcStartX), Math.max(0, srcStartY),
-        sampleW / scale, sampleH / scale,
-        0, 0, sampleW, sampleH
-      );
-      const d = ctx2.getImageData(0, 0, sampleW, sampleH).data;
-      let totalLum = 0, count = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        // Relative luminance (perceptual)
-        const r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
-        totalLum += 0.2126*r + 0.7152*g + 0.0722*b;
-        count++;
-      }
-      const avgLum   = count ? totalLum / count : 0.5;
-      const textCol  = avgLum > 0.45 ? '#002266' : '#ffffff';
-      const shadow   = avgLum > 0.45
-        ? '0 1px 4px rgba(255,255,255,0.5)'
-        : '0 1px 6px rgba(0,0,0,0.6)';
-      tile.querySelectorAll('.sun-label, .sun-time').forEach(el => {
-        el.style.color      = textCol;
-        el.style.textShadow = shadow;
-      });
-    };
-    img.src = imgSrc;
-  });
+    if (bgImage) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const cvs    = document.createElement('canvas');
+        const rect   = sunsetTile.getBoundingClientRect();
+        const sampleW = Math.max(1, Math.round(rect.width  * 0.6));
+        const sampleH = Math.max(1, Math.round(rect.height * 0.35));
+        cvs.width  = sampleW;
+        cvs.height = sampleH;
+        const ctx2    = cvs.getContext('2d');
+        const scale   = 1.5;
+        const drawW   = img.naturalWidth  * scale;
+        const drawH   = img.naturalHeight * scale;
+        const offsetX = (rect.width  - drawW) / 2;
+        const offsetY = (rect.height - drawH) / 2;
+        const srcStartY = (rect.height - sampleH - offsetY) / scale;
+        const srcStartX = (rect.width  / 2 - sampleW / 2 - offsetX) / scale;
+        ctx2.drawImage(img,
+          Math.max(0, srcStartX), Math.max(0, srcStartY),
+          sampleW / scale, sampleH / scale,
+          0, 0, sampleW, sampleH
+        );
+        const d = ctx2.getImageData(0, 0, sampleW, sampleH).data;
+        let totalLum = 0, count = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
+          totalLum += 0.2126*r + 0.7152*g + 0.0722*b;
+          count++;
+        }
+        const avgLum  = count ? totalLum / count : 0.5;
+        const textCol = avgLum > 0.45 ? '#002266' : '#ffffff';
+        const shadow  = avgLum > 0.45
+          ? '0 1px 4px rgba(255,255,255,0.5)'
+          : '0 1px 6px rgba(0,0,0,0.6)';
+        // Apply same colour to both tiles
+        [sunsetTile, sunriseTile].forEach(t => {
+          if (!t) return;
+          t.querySelectorAll('.sun-label, .sun-time').forEach(el => {
+            el.style.color      = textCol;
+            el.style.textShadow = shadow;
+          });
+        });
+      };
+      img.src = bgImage[1];
+    }
+  }
 
   // ── Weather + Wave + Wind per time slot ──
 
