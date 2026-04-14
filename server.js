@@ -254,7 +254,9 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
 
     // Commit and push from the worktree
     execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
-    execSync(`git commit -m "Deploy skin: ${skinName} (${active.start} → ${active.end})"`, { cwd: WORKTREE, stdio: 'pipe' });
+    try {
+      execSync(`git commit -m "Deploy skin: ${skinName} (${active.start} → ${active.end})"`, { cwd: WORKTREE, stdio: 'pipe' });
+    } catch (_) { /* nothing new to commit — still push */ }
     execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
 
     // Clean up
@@ -299,10 +301,10 @@ app.post('/api/revert-main-to-default', (req, res) => {
     const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
     fs.writeFileSync(mainSchedulePath, '[]');
 
-    execSync(`git add skin-schedule.json`, { cwd: WORKTREE, stdio: 'pipe' });
+    execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
     try {
       execSync(`git commit -m "Revert main to default ocean skin"`, { cwd: WORKTREE, stdio: 'pipe' });
-    } catch (_) { /* nothing to commit */ }
+    } catch (_) { /* nothing to commit — still push */ }
     execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
 
     execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
