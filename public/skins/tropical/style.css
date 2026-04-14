@@ -1,0 +1,82 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tropical skin — overrides only, loaded on top of base style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --primary:   #3D1A00;
+  --accent:    #C87020;
+  --card-bg:   #F5E6C0;
+  --shadow:    0 4px 16px rgba(80,40,0,0.20);
+  --radius:    12px;
+  --text-dark: #3D1A00;
+  --text-mid:  #6B4020;
+}
+
+body {
+  background: linear-gradient(160deg, #FFF8E7 0%, #FFE4A0 55%, #FFD068 100%);
+}
+
+.loading-overlay {
+  background: rgba(80,40,5,0.88);
+}
+
+header {
+  background: url('/skins/tropical/skin/header-bg.png') center center / cover no-repeat;
+  box-shadow: 0 4px 20px rgba(80,40,0,0.40);
+}
+
+.drum-wrapper {
+  background: url('/skins/tropical/skin/drum-bg.png') center top / cover no-repeat;
+}
+
+.drum-fade-left  { background: linear-gradient(to right, rgba(80,45,5,0.88) 0%, transparent 100%); }
+.drum-fade-right { background: linear-gradient(to left,  rgba(80,45,5,0.88) 0%, transparent 100%); }
+
+.drum-item          { color: rgba(255,255,255,0.55); }
+.drum-item.active   { color: #fff; }
+.drum-item.drum-yesterday { color: rgba(255,255,255,0.3); }
+.drum-ring          { border: 2px solid rgba(255,255,255,0.6); }
+
+.wx-cell {
+  background: url('/skins/tropical/skin/weather-card-bg.png') center center / cover no-repeat;
+}
+
+.wv-cell {
+  background: url('/skins/tropical/skin/wave-row-bg.png') center center / 300% 100% no-repeat;
+}
+#waveRow .mx-cell:nth-child(1) { background-position: right center; }
+#waveRow .mx-cell:nth-child(2) { background-position: center center; }
+#waveRow .mx-cell:nth-child(3) { background-position: left center; }
+
+.wd-cell {
+  background: url('/skins/tropical/skin/wind-row-bg.png') center center / 300% 100% no-repeat;
+}
+#windRow .mx-cell:nth-child(1) { background-position: right center; }
+#windRow .mx-cell:nth-child(2) { background-position: center center; }
+#windRow .mx-cell:nth-child(3) { background-position: left center; }
+
+.wx-temp  { color: #3D1A00; }
+.wv-val   { color: #3D1A00; }
+.sea-temp { color: #5C2E00; }
+.wd-pill  { color: #3D1A00; }
+
+.sunrise-tile {
+  background: url('/skins/tropical/skin/sunrise-bg.png') center center / cover no-repeat;
+}
+.sunset-tile {
+  background: url('/skins/tropical/skin/sunset-bg.png') center center / cover no-repeat;
+}
+
+.sun-row {
+  position: relative;
+  margin-top: 10px;
+}
+.sun-row::before {
+  content: '';
+  position: absolute;
+  top: -22px;
+  left: 0; right: 0;
+  height: 22px;
+  z-index: 5;
+  background: url('/skins/tropical/skin/bunting-bg.png') center / cover no-repeat;
+}
