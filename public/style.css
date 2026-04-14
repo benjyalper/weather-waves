@@ -158,6 +158,10 @@ header {
 .drum-day  { font-size: var(--font-md); font-weight: var(--w-heavy); line-height: 1.15; letter-spacing: 0.3px; }
 .drum-date { font-size: var(--font-sm); font-weight: var(--w-mid);  line-height: 1.15; letter-spacing: 0.2px; opacity: 0.8; }
 
+/* Active (ring) item — bigger and fully opaque */
+.drum-item.active .drum-day  { font-size: 1.18rem; }
+.drum-item.active .drum-date { font-size: 0.95rem; opacity: 1; font-weight: var(--w-bold); }
+
 .drum-fade {
   position: absolute;
   top: 0; bottom: 0;
@@ -417,17 +421,17 @@ header {
 }
 
 .sun-label {
-  font-size: var(--font-sm);
+  font-size: var(--font-md);
   font-weight: var(--w-heavy);
   letter-spacing: 0.5px;
   color: var(--text-dark);
   text-shadow: none;
-  opacity: 0.8;
-  margin-bottom: 2px;
+  opacity: 1;
+  margin-bottom: 3px;
 }
 
 .sun-time {
-  font-size: var(--font-sm);
+  font-size: 1.15rem;
   font-weight: var(--w-heavy);
   letter-spacing: 0.8px;
   color: var(--text-dark);
