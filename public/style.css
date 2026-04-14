@@ -131,20 +131,17 @@ header {
   padding: 8px 4px;
   border-radius: 12px;
   cursor: pointer;
-  color: rgba(255,255,255,0.5);
-  transition: color 0.3s, transform 0.35s ease, opacity 0.35s ease;
+  transition: transform 0.35s ease, opacity 0.35s ease;
   direction: rtl;
   user-select: none;
   transform-origin: center center;
 }
 
-.drum-item.active { color: #fff; }
-
 /* Yesterday — dimmed, not interactive */
 .drum-item.drum-yesterday {
   cursor: default;
   pointer-events: none;
-  color: rgba(255,255,255,0.3);
+  opacity: 0.35;
 }
 
 .drum-item.today .drum-day::after {
@@ -153,13 +150,34 @@ header {
   font-size: 0.45rem;
   margin-top: -2px;
   color: #FFD600;
+  mix-blend-mode: normal;
 }
 
-.drum-day  { font-size: var(--font-md); font-weight: var(--w-heavy); line-height: 1.15; letter-spacing: 0.3px; }
-.drum-date { font-size: var(--font-sm); font-weight: var(--w-mid);  line-height: 1.15; letter-spacing: 0.2px; opacity: 0.8; }
+/* mix-blend-mode: difference makes white text invert against the background —
+   light bg → dark text, dark bg → white text, automatically */
+.drum-day {
+  font-size: var(--font-md);
+  font-weight: var(--w-heavy);
+  line-height: 1.15;
+  letter-spacing: 0.3px;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+.drum-date {
+  font-size: var(--font-sm);
+  font-weight: var(--w-mid);
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+  color: rgba(255,255,255,0.85);
+  mix-blend-mode: difference;
+}
+
+/* Non-active items — slightly faded */
+.drum-item:not(.active) .drum-day,
+.drum-item:not(.active) .drum-date { opacity: 0.55; }
 
 /* Active (ring) item — bigger and fully opaque */
-.drum-item.active .drum-day  { font-size: 1.18rem; }
+.drum-item.active .drum-day  { font-size: 1.18rem; opacity: 1; }
 .drum-item.active .drum-date { font-size: 0.95rem; opacity: 1; font-weight: var(--w-bold); }
 
 .drum-fade {
@@ -424,18 +442,19 @@ header {
   font-size: var(--font-md);
   font-weight: var(--w-heavy);
   letter-spacing: 0.5px;
-  color: var(--text-dark);
-  text-shadow: none;
-  opacity: 1;
+  /* color set by JS pixel sampling */
   margin-bottom: 3px;
+  transition: color 0.3s;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 
 .sun-time {
   font-size: 1.15rem;
   font-weight: var(--w-heavy);
   letter-spacing: 0.8px;
-  color: var(--text-dark);
-  text-shadow: none;
+  /* color set by JS pixel sampling */
+  transition: color 0.3s;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.18);
   direction: ltr;
   unicode-bidi: isolate;
 }
