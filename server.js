@@ -241,16 +241,9 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
     fs.mkdirSync(skinDest, { recursive: true });
     execSync(`xcopy /E /I /Y "${skinSrc}" "${skinDest}"`, { stdio: 'pipe' });
 
-    // Write skin-schedule.json on main with only this skin's entry
+    // Replace main's schedule entirely with just this skin — avoids stale entries conflicting
     const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
-    let mainSchedule = [];
-    if (fs.existsSync(mainSchedulePath)) {
-      try { mainSchedule = JSON.parse(fs.readFileSync(mainSchedulePath, 'utf8')); } catch (_) {}
-    }
-    // Upsert this skin's entry, keep others
-    const idx = mainSchedule.findIndex(s => s.name === skinName);
-    if (idx >= 0) mainSchedule[idx] = active; else mainSchedule.push(active);
-    fs.writeFileSync(mainSchedulePath, JSON.stringify(mainSchedule, null, 2));
+    fs.writeFileSync(mainSchedulePath, JSON.stringify([active], null, 2));
 
     // Commit and push from the worktree
     execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
