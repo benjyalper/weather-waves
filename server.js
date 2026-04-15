@@ -99,8 +99,10 @@ if (ADMIN_PIN) {
     if (!needsAuth) return next();
     const auth = req.headers['authorization'] || '';
     if (auth.startsWith('Basic ')) {
-      const [, pass] = Buffer.from(auth.slice(6), 'base64').toString('utf8').split(':');
-      if (pass === ADMIN_PIN) return next();
+      const decoded  = Buffer.from(auth.slice(6), 'base64').toString('utf8');
+      const colonIdx = decoded.indexOf(':');
+      const pass     = colonIdx >= 0 ? decoded.slice(colonIdx + 1) : decoded;
+      if (pass.trim() === ADMIN_PIN.trim()) return next();
     }
     res.setHeader('WWW-Authenticate', 'Basic realm="Skin Admin"');
     res.status(401).send('Unauthorized');
