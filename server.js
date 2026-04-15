@@ -20,6 +20,93 @@ require('./generate-icon');
 const app = express();
 const PORT = process.env.PORT || 3008;
 
+// ─── GitHub API helpers (used when GITHUB_TOKEN env var is set) ───────────────
+// Without GITHUB_TOKEN the server falls back to local git CLI — no behaviour change.
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO  = process.env.GITHUB_REPO || 'benjyalper/weather-waves';
+
+async function ghRequest(method, endpoint, body) {
+  const r = await fetch(`https://api.github.com${endpoint}`, {
+    method,
+    headers: {
+      Authorization:          `Bearer ${GITHUB_TOKEN}`,
+      'Content-Type':         'application/json',
+      Accept:                 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {})
+  });
+  const json = await r.json();
+  if (!r.ok) throw new Error(json.message || `GitHub API ${r.status}`);
+  return json;
+}
+
+// Atomically commit multiple files to a branch via the Git Data API
+async function ghCommitFiles(files, message, branch) {
+  // files: [{ path: string (repo-relative, forward slashes), content: Buffer|string }]
+  const ref    = await ghRequest('GET',  `/repos/${GITHUB_REPO}/git/ref/heads/${branch}`);
+  const commit = await ghRequest('GET',  `/repos/${GITHUB_REPO}/git/commits/${ref.object.sha}`);
+
+  const treeItems = await Promise.all(files.map(async f => {
+    const buf  = Buffer.isBuffer(f.content) ? f.content : Buffer.from(f.content, 'utf8');
+    const blob = await ghRequest('POST', `/repos/${GITHUB_REPO}/git/blobs`, {
+      content: buf.toString('base64'), encoding: 'base64'
+    });
+    return { path: f.path, mode: '100644', type: 'blob', sha: blob.sha };
+  }));
+
+  const tree      = await ghRequest('POST',  `/repos/${GITHUB_REPO}/git/trees`,   { base_tree: commit.tree.sha, tree: treeItems });
+  const newCommit = await ghRequest('POST',  `/repos/${GITHUB_REPO}/git/commits`, { message, tree: tree.sha, parents: [ref.object.sha] });
+  await              ghRequest('PATCH', `/repos/${GITHUB_REPO}/git/refs/heads/${branch}`, { sha: newCommit.sha });
+  return newCommit;
+}
+
+// Recursively read all files under a local dir → [{ path (repo-relative), content: Buffer }]
+function readDirFiles(localDir, repoBase) {
+  const results = [];
+  if (!fs.existsSync(localDir)) return results;
+  for (const entry of fs.readdirSync(localDir)) {
+    const full = path.join(localDir, entry);
+    if (fs.statSync(full).isDirectory()) {
+      results.push(...readDirFiles(full, `${repoBase}/${entry}`));
+    } else {
+      results.push({ path: `${repoBase}/${entry}`, content: fs.readFileSync(full) });
+    }
+  }
+  return results;
+}
+
+// Files that must be on main for the skin system to work
+function infraFiles() {
+  return [
+    'server.js', 'package.json', 'package-lock.json',
+    'public/index.html', 'public/style.css', 'public/script.js',
+  ].filter(f => fs.existsSync(path.join(__dirname, f)))
+   .map(f => ({ path: f, content: fs.readFileSync(path.join(__dirname, f)) }));
+}
+
+// ─── Admin PIN protection (only active when ADMIN_PIN env var is set) ─────────
+// Set ADMIN_PIN on Railway to password-protect /admin.html and all /api/ admin routes.
+// Locally (no ADMIN_PIN) everything remains open as before.
+const ADMIN_PIN = process.env.ADMIN_PIN;
+if (ADMIN_PIN) {
+  const PROTECTED_PATHS = ['/admin.html', '/upload.html'];
+  const PROTECTED_API   = ['/api/schedule', '/api/skins', '/api/upload-skin',
+                           '/api/download-skin', '/api/deploy-to-main', '/api/revert-main-to-default'];
+  app.use((req, res, next) => {
+    const needsAuth = PROTECTED_PATHS.includes(req.path) ||
+                      PROTECTED_API.some(p => req.path.startsWith(p));
+    if (!needsAuth) return next();
+    const auth = req.headers['authorization'] || '';
+    if (auth.startsWith('Basic ')) {
+      const [, pass] = Buffer.from(auth.slice(6), 'base64').toString('utf8').split(':');
+      if (pass === ADMIN_PIN) return next();
+    }
+    res.setHeader('WWW-Authenticate', 'Basic realm="Skin Admin"');
+    res.status(401).send('Unauthorized');
+  });
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Active skin ──────────────────────────────────────────────────────────────
@@ -174,24 +261,34 @@ app.get('/api/schedule', (req, res) => {
   res.json(JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8')));
 });
 
-app.post('/api/schedule', express.json(), (req, res) => {
+app.post('/api/schedule', express.json(), async (req, res) => {
   fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
-  try {
-    execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
+  if (GITHUB_TOKEN) {
     try {
-      execSync('git commit -m "Update skin schedule via admin"', { cwd: __dirname, stdio: 'pipe' });
-    } catch (_) { /* nothing to commit — that's fine, still push */ }
-    execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
-    res.json({ ok: true, pushed: true });
-  } catch (err) {
-    res.json({ ok: true, pushed: false, gitError: err.message });
+      await ghCommitFiles(
+        [{ path: 'skin-schedule.json', content: JSON.stringify(req.body, null, 2) }],
+        'Update skin schedule via admin', 'dev'
+      );
+      res.json({ ok: true, pushed: true });
+    } catch (err) {
+      console.error('[schedule push]', err.message);
+      res.json({ ok: true, pushed: false, gitError: err.message });
+    }
+  } else {
+    // Local git CLI fallback
+    try {
+      execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
+      try { execSync('git commit -m "Update skin schedule via admin"', { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
+      execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
+      res.json({ ok: true, pushed: true });
+    } catch (err) {
+      res.json({ ok: true, pushed: false, gitError: err.message });
+    }
   }
 });
 
-app.post('/api/deploy-to-main', express.json(), (req, res) => {
-  const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+app.post('/api/deploy-to-main', express.json(), async (req, res) => {
   try {
-    // Find the currently active skin + its schedule entry
     const schedule = JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8'));
     const mmdd     = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(5);
     const active   = schedule.find(s => s.name !== 'default' && mmdd >= s.start && mmdd <= s.end);
@@ -201,111 +298,73 @@ app.post('/api/deploy-to-main', express.json(), (req, res) => {
     const skinSrc  = path.join(SKINS_DIR, skinName);
     if (!fs.existsSync(skinSrc)) return res.status(400).json({ error: `Skin folder not found: ${skinName}` });
 
-    // Clean up any leftover worktree
-    if (fs.existsSync(WORKTREE)) {
-      execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+    if (GITHUB_TOKEN) {
+      const files = [
+        ...infraFiles(),
+        ...readDirFiles(path.join(SKINS_DIR, 'default'), 'public/skins/default'),
+        ...readDirFiles(skinSrc, `public/skins/${skinName}`),
+        { path: 'skin-schedule.json', content: JSON.stringify([active], null, 2) },
+      ];
+      await ghCommitFiles(files, `Deploy skin: ${skinName} (${active.start} → ${active.end})`, 'main');
+      return res.json({ ok: true, skin: skinName });
     }
 
-    // Create isolated worktree on main
+    // ── Local git CLI fallback (worktree) ──────────────────────────────────
+    const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+    if (fs.existsSync(WORKTREE)) execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
-
-    // Copy skin infrastructure files (server, frontend, default skin)
-    const filesToSync = [
-      'server.js',
-      'package.json',
-      'package-lock.json',
-      path.join('public', 'index.html'),
-      path.join('public', 'style.css'),
-      path.join('public', 'script.js'),
-    ];
-    for (const f of filesToSync) {
-      const src = path.join(__dirname, f);
-      const dst = path.join(WORKTREE, f);
-      if (fs.existsSync(src)) {
-        fs.mkdirSync(path.dirname(dst), { recursive: true });
-        fs.copyFileSync(src, dst);
-      }
+    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js']) {
+      const src = path.join(__dirname, f); const dst = path.join(WORKTREE, f);
+      if (fs.existsSync(src)) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); }
     }
-
-    // Copy default skin folder
-    const defaultSrc = path.join(SKINS_DIR, 'default');
     const defaultDst = path.join(WORKTREE, 'public', 'skins', 'default');
-    if (fs.existsSync(defaultSrc)) {
-      fs.mkdirSync(defaultDst, { recursive: true });
-      execSync(`xcopy /E /I /Y "${defaultSrc}" "${defaultDst}"`, { stdio: 'pipe' });
-    }
-
-    // Copy active skin folder into worktree
+    fs.mkdirSync(defaultDst, { recursive: true });
+    execSync(`xcopy /E /I /Y "${path.join(SKINS_DIR,'default')}" "${defaultDst}"`, { stdio: 'pipe' });
     const skinDest = path.join(WORKTREE, 'public', 'skins', skinName);
     fs.mkdirSync(skinDest, { recursive: true });
     execSync(`xcopy /E /I /Y "${skinSrc}" "${skinDest}"`, { stdio: 'pipe' });
-
-    // Replace main's schedule entirely with just this skin — avoids stale entries conflicting
-    const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
-    fs.writeFileSync(mainSchedulePath, JSON.stringify([active], null, 2));
-
-    // Commit and push from the worktree
+    fs.writeFileSync(path.join(WORKTREE, 'skin-schedule.json'), JSON.stringify([active], null, 2));
     execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
-    try {
-      execSync(`git commit -m "Deploy skin: ${skinName} (${active.start} → ${active.end})"`, { cwd: WORKTREE, stdio: 'pipe' });
-    } catch (_) { /* nothing new to commit — still push */ }
+    try { execSync(`git commit -m "Deploy skin: ${skinName} (${active.start} → ${active.end})"`, { cwd: WORKTREE, stdio: 'pipe' }); } catch (_) {}
     execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
-
-    // Clean up
     execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
-
     res.json({ ok: true, skin: skinName });
   } catch (err) {
-    try { execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
-    console.error('[deploy-to-main]', err.stderr?.toString() || err.message);
-    res.status(500).json({ error: err.stderr?.toString() || err.message });
+    console.error('[deploy-to-main]', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/revert-main-to-default', (req, res) => {
-  const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+app.post('/api/revert-main-to-default', async (req, res) => {
   try {
-    if (fs.existsSync(WORKTREE)) {
-      execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
+    if (GITHUB_TOKEN) {
+      const files = [
+        ...infraFiles(),
+        { path: 'skin-schedule.json', content: '[]' },
+      ];
+      await ghCommitFiles(files, 'Revert main to default ocean skin', 'main');
+      return res.json({ ok: true });
     }
+
+    // ── Local git CLI fallback (worktree) ──────────────────────────────────
+    const WORKTREE = path.join(__dirname, '.main-deploy-worktree');
+    if (fs.existsSync(WORKTREE)) execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
-
-    // Sync infrastructure files so the skin system is present on main
-    const filesToSync = [
-      'server.js',
-      'package.json',
-      'package-lock.json',
-      path.join('public', 'index.html'),
-      path.join('public', 'style.css'),
-      path.join('public', 'script.js'),
-    ];
-    for (const f of filesToSync) {
-      const src = path.join(__dirname, f);
-      const dst = path.join(WORKTREE, f);
-      if (fs.existsSync(src)) {
-        fs.mkdirSync(path.dirname(dst), { recursive: true });
-        fs.copyFileSync(src, dst);
-      }
+    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js']) {
+      const src = path.join(__dirname, f); const dst = path.join(WORKTREE, f);
+      if (fs.existsSync(src)) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); }
     }
-
-    // Write an empty schedule so no skin is active → default ocean shows
-    const mainSchedulePath = path.join(WORKTREE, 'skin-schedule.json');
-    fs.writeFileSync(mainSchedulePath, '[]');
-
+    fs.writeFileSync(path.join(WORKTREE, 'skin-schedule.json'), '[]');
     execSync(`git add -A`, { cwd: WORKTREE, stdio: 'pipe' });
-    try {
-      execSync(`git commit -m "Revert main to default ocean skin"`, { cwd: WORKTREE, stdio: 'pipe' });
-    } catch (_) { /* nothing to commit — still push */ }
+    try { execSync(`git commit -m "Revert main to default ocean skin"`, { cwd: WORKTREE, stdio: 'pipe' }); } catch (_) {}
     execSync(`git push origin HEAD:main`, { cwd: WORKTREE, stdio: 'pipe' });
-
     execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
     res.json({ ok: true });
   } catch (err) {
-    try { execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
-    console.error('[revert-main]', err.stderr?.toString() || err.message);
-    res.status(500).json({ error: err.stderr?.toString() || err.message });
+    console.error('[revert-main]', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -398,13 +457,19 @@ app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
     // Git push
     let pushed = false;
     let gitError = null;
-    try {
-      execSync(`git add public/skins/${skinName}`, { cwd: __dirname, stdio: 'pipe' });
-      execSync(`git commit -m "Add skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
-      execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
-      pushed = true;
-    } catch (e) {
-      gitError = e.stderr?.toString() || e.message;
+    if (GITHUB_TOKEN) {
+      try {
+        const files = readDirFiles(skinDir, `public/skins/${skinName}`);
+        await ghCommitFiles(files, `Add skin: ${skinName}`, 'dev');
+        pushed = true;
+      } catch (e) { gitError = e.message; }
+    } else {
+      try {
+        execSync(`git add public/skins/${skinName}`, { cwd: __dirname, stdio: 'pipe' });
+        execSync(`git commit -m "Add skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
+        execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
+        pushed = true;
+      } catch (e) { gitError = e.stderr?.toString() || e.message; }
     }
 
     res.json({ ok: true, name: skinName, pushed, gitError });
