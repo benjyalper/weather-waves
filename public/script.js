@@ -6,30 +6,30 @@
  */
 
 // ─── Location & Config ────────────────────────────────────────────────────────
-const LAT  = 32.6798;   // Neve Yam
-const LON  = 34.9319;
+const LAT = 32.6798;   // Neve Yam
+const LON = 34.9319;
 const CITY = 'נווה ים';
 
 const REFRESH_MS = 30 * 60 * 1000;   // auto-refresh every 30 min
 
 // ─── Global state ─────────────────────────────────────────────────────────────
 let gWeatherData = null;
-let gMarineData  = null;
+let gMarineData = null;
 let gSelectedDay = 0;
 
 // ─── Hebrew helpers ────────────────────────────────────────────────────────────
 // JS getDay() → 0=Sun … 6=Sat   /   Hebrew: א=Sun ב=Mon ג=Tue ד=Wed ה=Thu ו=Fri ש=Sat
-const HEBREW_DAYS      = ['א','ב','ג','ד','ה','ו','ש'];
-const HEBREW_DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const HEBREW_DAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const HEBREW_DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 // ─── Weather Code → Category ──────────────────────────────────────────────────
 function getWeatherCategory(code) {
-  if (code === 0)               return 'sunny';
-  if (code <= 2)                return 'partly-cloudy';
-  if (code <= 48)               return 'cloudy';
+  if (code === 0) return 'sunny';
+  if (code <= 2) return 'partly-cloudy';
+  if (code <= 48) return 'cloudy';
   if (code >= 51 && code <= 82) return 'rainy';
   if (code >= 85 && code <= 86) return 'rainy';
-  if (code >= 95)               return 'stormy';
+  if (code >= 95) return 'stormy';
   return 'cloudy';
 }
 
@@ -256,11 +256,11 @@ const WEATHER_ICONS = {
 // ─── Lottie weather animation URLs (Meteocons by Bas Milius, MIT) ─────────────
 const LOTTIE_BASE = 'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/lottie/';
 const LOTTIE_WEATHER = {
-  'sunny':         LOTTIE_BASE + 'clear-day.json',
+  'sunny': LOTTIE_BASE + 'clear-day.json',
   'partly-cloudy': LOTTIE_BASE + 'partly-cloudy-day.json',
-  'cloudy':        LOTTIE_BASE + 'overcast-day.json',
-  'rainy':         LOTTIE_BASE + 'rain.json',
-  'stormy':        LOTTIE_BASE + 'thunderstorms-rain.json'
+  'cloudy': LOTTIE_BASE + 'overcast-day.json',
+  'rainy': LOTTIE_BASE + 'rain.json',
+  'stormy': LOTTIE_BASE + 'thunderstorms-rain.json'
 };
 const WAVE_ICONS = {
   'flat': iconWaveFlat, 'small': iconWaveSmall,
@@ -273,15 +273,15 @@ let waveAnimIds = [null, null, null];
 
 // ─── Wind speed → particle colour ─────────────────────────────────────────────
 function windColour(kmh, alpha) {
-  if (kmh <  10) return `rgba( 30,100,210,${alpha})`;   // calm   — dark blue
-  if (kmh <  30) return `rgba(  0,160,100,${alpha})`;   // light  — teal
-  if (kmh <  50) return `rgba(200,130,  0,${alpha})`;   // strong — amber
-  return                 `rgba(210, 30, 30,${alpha})`;  // storm  — red
+  if (kmh < 10) return `rgba( 30,100,210,${alpha})`;   // calm   — dark blue
+  if (kmh < 30) return `rgba(  0,160,100,${alpha})`;   // light  — teal
+  if (kmh < 50) return `rgba(200,130,  0,${alpha})`;   // strong — amber
+  return `rgba(210, 30, 30,${alpha})`;  // storm  — red
 }
 
 // Meteorological degrees → standard Hebrew abbreviated compass label (geresh ׳ = U+05F3)
 function windDirHebrew(deg) {
-  const dirs = ['צפ׳','צפ׳-מז׳','מז׳','דר׳-מז׳','דר׳','דר׳-מע׳','מע׳','צפ׳-מע׳'];
+  const dirs = ['צפ׳', 'צפ׳-מז׳', 'מז׳', 'דר׳-מז׳', 'דר׳', 'דר׳-מע׳', 'מע׳', 'צפ׳-מע׳'];
   return dirs[Math.round(deg / 45) % 8];
 }
 
@@ -293,13 +293,13 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
 
   const wrap = canvas.parentElement;
   const rect = wrap.getBoundingClientRect();
-  canvas.width  = Math.max(1, Math.round(rect.width));
+  canvas.width = Math.max(1, Math.round(rect.width));
   canvas.height = Math.max(1, Math.round(rect.height));
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
 
   const travelDeg = (dirDeg + 180) % 360;
-  const rad   = travelDeg * Math.PI / 180;
+  const rad = travelDeg * Math.PI / 180;
   const speed = Math.max(0.5, speedKmh * 0.038);
   const vx = Math.sin(rad) * speed;
   const vy = -Math.cos(rad) * speed;
@@ -307,25 +307,27 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
   const N = 180, MAX_TRAIL = 14;
 
   function spawnPos(random) {
-    if (random) return { x: Math.random()*W, y: Math.random()*H };
+    if (random) return { x: Math.random() * W, y: Math.random() * H };
     if (Math.abs(vx) >= Math.abs(vy))
-      return { x: vx > 0 ? 0 : W, y: Math.random()*H };
-    return { x: Math.random()*W, y: vy > 0 ? 0 : H };
+      return { x: vx > 0 ? 0 : W, y: Math.random() * H };
+    return { x: Math.random() * W, y: vy > 0 ? 0 : H };
   }
 
   const particles = Array.from({ length: N }, () => {
     const p = spawnPos(true);
-    return { x:p.x, y:p.y, history:[], age:Math.floor(Math.random()*80),
-             life:55+Math.random()*65, spd:0.5+Math.random()*0.9 };
+    return {
+      x: p.x, y: p.y, history: [], age: Math.floor(Math.random() * 80),
+      life: 55 + Math.random() * 65, spd: 0.5 + Math.random() * 0.9
+    };
   });
 
   function frame() {
     // Default skin: paint the blue sky gradient; illustrated skins: clear to transparent
     if ((window.ACTIVE_SKIN || 'default') === 'default') {
       const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0,   'rgba(178,216,248,1)');
+      bg.addColorStop(0, 'rgba(178,216,248,1)');
       bg.addColorStop(0.6, 'rgba(213,236,252,1)');
-      bg.addColorStop(1,   'rgba(236,248,255,1)');
+      bg.addColorStop(1, 'rgba(236,248,255,1)');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
     } else {
@@ -334,7 +336,7 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
 
     // 2 — Wind streak particles
     particles.forEach(p => {
-      p.history.push({ x:p.x, y:p.y });
+      p.history.push({ x: p.x, y: p.y });
       if (p.history.length > MAX_TRAIL) p.history.shift();
       p.x += vx * p.spd;
       p.y += vy * p.spd;
@@ -343,16 +345,16 @@ function startWindAnimation(idx, speedKmh, dirDeg) {
       for (let i = 1; i < p.history.length; i++) {
         const t = i / p.history.length;
         ctx.strokeStyle = windColour(speedKmh, t * lifeFade * 0.78);
-        ctx.lineWidth   = 0.8 + t * 0.9;
+        ctx.lineWidth = 0.8 + t * 0.9;
         ctx.beginPath();
-        ctx.moveTo(p.history[i-1].x, p.history[i-1].y);
-        ctx.lineTo(p.history[i].x,   p.history[i].y);
+        ctx.moveTo(p.history[i - 1].x, p.history[i - 1].y);
+        ctx.lineTo(p.history[i].x, p.history[i].y);
         ctx.stroke();
       }
-      if (p.age >= p.life || p.x < -20 || p.x > W+20 || p.y < -20 || p.y > H+20) {
+      if (p.age >= p.life || p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
         const np = spawnPos(false);
-        p.x=np.x; p.y=np.y; p.history=[];
-        p.age=0; p.life=55+Math.random()*65; p.spd=0.5+Math.random()*0.9;
+        p.x = np.x; p.y = np.y; p.history = [];
+        p.age = 0; p.life = 55 + Math.random() * 65; p.spd = 0.5 + Math.random() * 0.9;
       }
     });
 
@@ -369,14 +371,14 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
 
   const cell = canvas.parentElement;
   const rect = cell.getBoundingClientRect();
-  canvas.width  = Math.max(1, Math.round(rect.width));
+  canvas.width = Math.max(1, Math.round(rect.width));
   canvas.height = Math.max(1, Math.round(rect.height));
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
 
-  const amplitude  = Math.min(H * 0.38, Math.max(3, waveHeightM * 9));
-  const numLayers  = 3;
-  const dirRad     = (waveDirDeg ?? 270) * Math.PI / 180;
+  const amplitude = Math.min(H * 0.38, Math.max(3, waveHeightM * 9));
+  const numLayers = 3;
+  const dirRad = (waveDirDeg ?? 270) * Math.PI / 180;
   const phaseSpeedX = Math.sin(dirRad) * 0.045;
   let phase = 0;
 
@@ -384,20 +386,20 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
     ctx.clearRect(0, 0, W, H);
     for (let i = 0; i < numLayers; i++) {
       const layerOffset = (i / numLayers) * Math.PI * 2;
-      const yBase   = H * (0.28 + i * 0.2);
+      const yBase = H * (0.28 + i * 0.2);
       const opacity = 0.22 + (i / numLayers) * 0.5;
-      const amp     = amplitude * (1 - i * 0.22);
+      const amp = amplitude * (1 - i * 0.22);
 
       ctx.beginPath();
       ctx.moveTo(0, yBase);
       for (let x = 0; x <= W; x += 2) {
-        const y = yBase + Math.sin((x/W)*Math.PI*3.5 + phase + layerOffset)*amp;
+        const y = yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp;
         ctx.lineTo(x, y);
       }
       ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-      const grad = ctx.createLinearGradient(0, yBase-amp, 0, H);
+      const grad = ctx.createLinearGradient(0, yBase - amp, 0, H);
       grad.addColorStop(0, `rgba(30,160,210,${opacity})`);
-      grad.addColorStop(1, `rgba(5,100,140,${opacity*0.45})`);
+      grad.addColorStop(1, `rgba(5,100,140,${opacity * 0.45})`);
       ctx.fillStyle = grad;
       ctx.fill();
 
@@ -405,9 +407,9 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
       ctx.beginPath();
       ctx.moveTo(0, yBase);
       for (let x = 0; x <= W; x += 2) {
-        ctx.lineTo(x, yBase + Math.sin((x/W)*Math.PI*3.5 + phase + layerOffset)*amp);
+        ctx.lineTo(x, yBase + Math.sin((x / W) * Math.PI * 3.5 + phase + layerOffset) * amp);
       }
-      ctx.strokeStyle = `rgba(255,255,255,${opacity*0.55})`;
+      ctx.strokeStyle = `rgba(255,255,255,${opacity * 0.55})`;
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -419,9 +421,9 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
 
 // ─── Time slots ────────────────────────────────────────────────────────────────
 const TIME_SLOTS = [
-  { key:'morning', label:'בוקר',   hour:8  },
-  { key:'noon',    label:'צהריים', hour:13 },
-  { key:'evening', label:'ערב',    hour:19 },
+  { key: 'morning', label: '6-11',  hour: 8  },
+  { key: 'noon',    label: '11-15', hour: 13 },
+  { key: 'evening', label: '15-20', hour: 17 },
 ];
 
 function getCurrentSlotKey() {
@@ -432,7 +434,7 @@ function getCurrentSlotKey() {
 }
 
 function findHourIndex(timeArray, dateStr, hour) {
-  const target = `${dateStr}T${String(hour).padStart(2,'0')}:00`;
+  const target = `${dateStr}T${String(hour).padStart(2, '0')}:00`;
   const idx = timeArray.findIndex(t => t === target);
   if (idx !== -1) return idx;
   return timeArray.findIndex(t => t.startsWith(dateStr));
@@ -442,7 +444,7 @@ function findHourIndex(timeArray, dateStr, hour) {
 let drumScrollTimer = null;
 
 function buildDrum(daily) {
-  const track    = document.getElementById('drumTrack');
+  const track = document.getElementById('drumTrack');
   track.innerHTML = '';
 
   // Leading spacer so the first real item can scroll to centre
@@ -457,25 +459,25 @@ function buildDrum(daily) {
   ydItem.dataset.idx = '-1';
   ydItem.innerHTML = `
     <div class="drum-day">אתמול</div>
-    <div class="drum-date">${yd.getDate()}/${yd.getMonth()+1}</div>
+    <div class="drum-date">${yd.getDate()}/${yd.getMonth() + 1}</div>
   `;
   track.appendChild(ydItem);
 
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
-  (daily?.time ?? []).slice(0,7).forEach((dateStr, i) => {
-    const date    = new Date(dateStr + 'T12:00:00');
-    const dow     = date.getDay();
-    const letter  = HEBREW_DAYS[dow];
+  (daily?.time ?? []).slice(0, 7).forEach((dateStr, i) => {
+    const date = new Date(dateStr + 'T12:00:00');
+    const dow = date.getDay();
+    const letter = HEBREW_DAYS[dow];
     const isToday = dateStr === todayStr;
-    const cat     = daily ? getWeatherCategory(daily.weather_code[i]) : 'cloudy';
-    const emoji   = WEATHER_EMOJI[cat];
-    const maxT    = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
+    const cat = daily ? getWeatherCategory(daily.weather_code[i]) : 'cloudy';
+    const emoji = WEATHER_EMOJI[cat];
+    const maxT = daily ? Math.round(daily.temperature_2m_max[i]) : '--';
 
     const item = document.createElement('div');
-    const dd   = new Date(dateStr + 'T12:00:00');
-    const dayLabel  = isToday ? 'היום' : HEBREW_DAY_NAMES[dow];
-    const dateLabel = `${dd.getDate()}/${dd.getMonth()+1}`;
+    const dd = new Date(dateStr + 'T12:00:00');
+    const dayLabel = isToday ? 'היום' : HEBREW_DAY_NAMES[dow];
+    const dateLabel = `${dd.getDate()}/${dd.getMonth() + 1}`;
 
     item.className = 'drum-item' + (isToday ? ' today' : '');
     item.dataset.idx = String(i);
@@ -523,25 +525,25 @@ function scrollDrumTo(idx) {
   const track = document.getElementById('drumTrack');
   const itemW = track.clientWidth / 3;
   // +1 to skip past the yesterday slot
-  track.scrollTo({ left: -(idx + 1) * itemW, behavior:'smooth' });
+  track.scrollTo({ left: -(idx + 1) * itemW, behavior: 'smooth' });
 }
 
 // 3-D ring illusion: distance from centre drives scale, opacity and rotateY
 function updateDrumActive(idx) {
   const RING = [
-    { scale: 1.06, opacity: 1.00, ry:  0  },  // dist 0 — centre / closest
-    { scale: 0.84, opacity: 0.62, ry: 34  },  // dist 1
-    { scale: 0.66, opacity: 0.36, ry: 58  },  // dist 2
-    { scale: 0.52, opacity: 0.18, ry: 72  },  // dist 3+
+    { scale: 1.06, opacity: 1.00, ry: 0 },  // dist 0 — centre / closest
+    { scale: 0.84, opacity: 0.62, ry: 34 },  // dist 1
+    { scale: 0.66, opacity: 0.36, ry: 58 },  // dist 2
+    { scale: 0.52, opacity: 0.18, ry: 72 },  // dist 3+
   ];
   document.querySelectorAll('.drum-item').forEach((el) => {
     const elIdx = parseInt(el.dataset.idx);
-    const dist  = Math.abs(elIdx - idx);
-    const r     = RING[Math.min(dist, RING.length - 1)];
-    const sign  = elIdx >= idx ? -1 : 1;   // tilt direction
+    const dist = Math.abs(elIdx - idx);
+    const r = RING[Math.min(dist, RING.length - 1)];
+    const sign = elIdx >= idx ? -1 : 1;   // tilt direction
     el.classList.toggle('active', elIdx === idx);
     el.style.transform = `perspective(480px) rotateY(${sign * r.ry}deg) scale(${r.scale})`;
-    el.style.opacity   = String(r.opacity);
+    el.style.opacity = String(r.opacity);
   });
 }
 
@@ -550,8 +552,8 @@ function renderDay(dayIdx) {
   gSelectedDay = dayIdx;
   updateDrumActive(dayIdx);
 
-  const daily        = gWeatherData?.daily;
-  const wHourly      = gWeatherData?.hourly;
+  const daily = gWeatherData?.daily;
+  const wHourly = gWeatherData?.hourly;
   const marineHourly = gMarineData?.hourly;
   if (!daily || !wHourly || !marineHourly) return;
 
@@ -559,34 +561,34 @@ function renderDay(dayIdx) {
 
   // ── Sun times ──
   const riseRaw = daily.sunrise?.[dayIdx] || '';
-  const setRaw  = daily.sunset?.[dayIdx]  || '';
-  document.getElementById('sunriseVal').textContent = riseRaw.slice(11,16) || '--:--';
-  document.getElementById('sunsetVal').textContent  = setRaw.slice(11,16)  || '--:--';
+  const setRaw = daily.sunset?.[dayIdx] || '';
+  document.getElementById('sunriseVal').textContent = riseRaw.slice(11, 16) || '--:--';
+  document.getElementById('sunsetVal').textContent = setRaw.slice(11, 16) || '--:--';
 
   // ── Sun tile adaptive text colour — both tiles use sunset's image as reference ──
-  const sunsetTile  = document.querySelector('.sunset-tile');
+  const sunsetTile = document.querySelector('.sunset-tile');
   const sunriseTile = document.querySelector('.sunrise-tile');
   if (sunsetTile) {
-    const style   = getComputedStyle(sunsetTile);
+    const style = getComputedStyle(sunsetTile);
     const bgImage = style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
     if (bgImage) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        const cvs    = document.createElement('canvas');
-        const rect   = sunsetTile.getBoundingClientRect();
-        const sampleW = Math.max(1, Math.round(rect.width  * 0.6));
+        const cvs = document.createElement('canvas');
+        const rect = sunsetTile.getBoundingClientRect();
+        const sampleW = Math.max(1, Math.round(rect.width * 0.6));
         const sampleH = Math.max(1, Math.round(rect.height * 0.35));
-        cvs.width  = sampleW;
+        cvs.width = sampleW;
         cvs.height = sampleH;
-        const ctx2    = cvs.getContext('2d');
-        const scale   = 1.5;
-        const drawW   = img.naturalWidth  * scale;
-        const drawH   = img.naturalHeight * scale;
-        const offsetX = (rect.width  - drawW) / 2;
+        const ctx2 = cvs.getContext('2d');
+        const scale = 1.5;
+        const drawW = img.naturalWidth * scale;
+        const drawH = img.naturalHeight * scale;
+        const offsetX = (rect.width - drawW) / 2;
         const offsetY = (rect.height - drawH) / 2;
         const srcStartY = (rect.height - sampleH - offsetY) / scale;
-        const srcStartX = (rect.width  / 2 - sampleW / 2 - offsetX) / scale;
+        const srcStartX = (rect.width / 2 - sampleW / 2 - offsetX) / scale;
         ctx2.drawImage(img,
           Math.max(0, srcStartX), Math.max(0, srcStartY),
           sampleW / scale, sampleH / scale,
@@ -595,20 +597,20 @@ function renderDay(dayIdx) {
         const d = ctx2.getImageData(0, 0, sampleW, sampleH).data;
         let totalLum = 0, count = 0;
         for (let i = 0; i < d.length; i += 4) {
-          const r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
-          totalLum += 0.2126*r + 0.7152*g + 0.0722*b;
+          const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+          totalLum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
           count++;
         }
-        const avgLum  = count ? totalLum / count : 0.5;
+        const avgLum = count ? totalLum / count : 0.5;
         const textCol = avgLum > 0.45 ? '#002266' : '#ffffff';
-        const shadow  = avgLum > 0.45
+        const shadow = avgLum > 0.45
           ? '0 1px 4px rgba(255,255,255,0.5)'
           : '0 1px 6px rgba(0,0,0,0.6)';
         // Apply same colour to both tiles
         [sunsetTile, sunriseTile].forEach(t => {
           if (!t) return;
           t.querySelectorAll('.sun-label, .sun-time').forEach(el => {
-            el.style.color      = textCol;
+            el.style.color = textCol;
             el.style.textShadow = shadow;
           });
         });
@@ -632,25 +634,25 @@ function renderDay(dayIdx) {
         src="${LOTTIE_WEATHER[wxCat] || LOTTIE_WEATHER['cloudy']}"
         background="transparent" speed="1" loop autoplay>
       </lottie-player>
-      <div class="wx-temp">${temp != null ? temp+'°' : '--'}</div>
+      <div class="wx-temp">${temp != null ? temp + '°' : '--'}</div>
     `;
 
     // Waves + sea surface temperature
-    const mIdx       = findHourIndex(marineHourly.time, dateStr, hour);
-    const waveH      = mIdx !== -1 ? marineHourly.wave_height?.[mIdx] : null;
-    const waveDir    = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
-    const seaTemp    = mIdx !== -1 ? marineHourly.sea_surface_temperature?.[mIdx] : null;
-    const wvValEl    = document.getElementById(`waveVal${i}`);
+    const mIdx = findHourIndex(marineHourly.time, dateStr, hour);
+    const waveH = mIdx !== -1 ? marineHourly.wave_height?.[mIdx] : null;
+    const waveDir = mIdx !== -1 ? (marineHourly.wave_direction?.[mIdx] ?? 270) : 270;
+    const seaTemp = mIdx !== -1 ? marineHourly.sea_surface_temperature?.[mIdx] : null;
+    const wvValEl = document.getElementById(`waveVal${i}`);
     wvValEl.textContent = waveH != null ? `${waveH.toFixed(1)} מ'` : '--';
-    const seaTempEl  = document.getElementById(`seaTemp${i}`);
+    const seaTempEl = document.getElementById(`seaTemp${i}`);
     if (seaTempEl) seaTempEl.textContent = seaTemp != null ? `🌡 ${Math.round(seaTemp)}°` : '--°';
 
     // Trigger wave canvas after a short delay so the cell has rendered dimensions
     setTimeout(() => startWaveAnimation(i, waveH ?? 0.5, waveDir), 50);
 
     // Wind
-    const windSpeed  = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx]     ?? 0) : 0;
-    const windDir    = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
+    const windSpeed = wIdx !== -1 ? (wHourly.wind_speed_10m?.[wIdx] ?? 0) : 0;
+    const windDir = wIdx !== -1 ? (wHourly.wind_direction_10m?.[wIdx] ?? 0) : 0;
     document.getElementById(`windBadge${i}`).innerHTML =
       `<div class="wd-pill"><span class="wd-arrow" style="display:inline-block;transform:rotate(${(windDir + 180) % 360}deg)">↑</span> ${windDirHebrew(windDir)}</div>
        <div class="wd-pill">${Math.round(windSpeed)} קמ"ש</div>`;
@@ -673,8 +675,8 @@ function showError(msg) {
 // ─── Timestamp ────────────────────────────────────────────────────────────────
 function updateTimestamp() {
   const now = new Date();
-  const hh  = String(now.getHours()).padStart(2,'0');
-  const mm  = String(now.getMinutes()).padStart(2,'0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('lastUpdated').textContent = `עודכן לאחרונה: ${hh}:${mm}`;
 }
 
@@ -688,10 +690,10 @@ async function fetchAllData() {
       fetch(`/api/marine?lat=${LAT}&lon=${LON}`)
     ]);
     if (!weatherRes.ok) throw new Error(`Weather ${weatherRes.status}`);
-    if (!marineRes.ok)  throw new Error(`Marine ${marineRes.status}`);
+    if (!marineRes.ok) throw new Error(`Marine ${marineRes.status}`);
 
     gWeatherData = await weatherRes.json();
-    gMarineData  = await marineRes.json();
+    gMarineData = await marineRes.json();
 
     buildDrum(gWeatherData.daily);
     renderDay(gSelectedDay);
