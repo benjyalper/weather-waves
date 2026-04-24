@@ -421,9 +421,9 @@ function startWaveAnimation(idx, waveHeightM, waveDirDeg) {
 
 // ─── Time slots ────────────────────────────────────────────────────────────────
 const TIME_SLOTS = [
-  { key: 'morning', label: '6-11',  hour: 8  },
-  { key: 'noon',    label: '11-15', hour: 13 },
-  { key: 'evening', label: '15-20', hour: 17 },
+  { key: 'morning', label: 'בוקר',   hour: 8  },
+  { key: 'noon',    label: 'צהריים', hour: 13 },
+  { key: 'evening', label: 'ערב',    hour: 17 },
 ];
 
 function getCurrentSlotKey() {
