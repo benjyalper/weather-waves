@@ -372,8 +372,8 @@ app.post('/api/revert-main-to-default', async (req, res) => {
 
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
 const SKIN_SLICES = [
-  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 370 },
-  { file: 'drum-bg.png',         left: 0,   top: 370,  width: 1024, height: 120 },
+  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 290 },
+  { file: 'drum-bg.png',         left: 0,   top: 290,  width: 1024, height: 160 },
   { file: 'weather-card-bg.png', left: 340, top: 580,  width: 345,  height: 185 },
   { file: 'wave-row-bg.png',     left: 0,   top: 770,  width: 1024, height: 210 },
   { file: 'wind-row-bg.png',     left: 0,   top: 980,  width: 1024, height: 105 },
