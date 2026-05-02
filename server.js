@@ -395,7 +395,7 @@ function skinCSS(name) {
 }
 body { background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%); }
 header { background: url('/skins/${name}/skin/header-bg.png') center center / cover no-repeat; }
-.drum-wrapper { background: url('/skins/${name}/skin/drum-bg.png') center top / cover no-repeat; }
+.drum-wrapper { background: url('/skins/${name}/skin/drum-bg.png') center center / 100% 100% no-repeat; }
 .wx-cell { background: url('/skins/${name}/skin/weather-card-bg.png') center center / cover no-repeat; }
 .wv-cell { background: url('/skins/${name}/skin/wave-row-bg.png') center center / 300% 100% no-repeat; }
 #waveRow .mx-cell:nth-child(1) { background-position: right center; }
