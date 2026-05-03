@@ -355,7 +355,9 @@
       if (!r.ok) throw new Error(result.error || 'Upload failed');
       fill.style.width = '100%';
 
-      const pushMsg = result.pushed ? 'pushed to dev ✓' : 'saved locally (git push failed)';
+      const pushMsg = result.pushed
+        ? 'pushed to dev ✓'
+        : `saved locally (git push failed: ${result.gitError || 'unknown'})`;
       setUploadStatus(`Skin "${name}" sliced & ${pushMsg}`, result.pushed ? 'ok' : 'error');
 
       // Refresh the schedule grid so new skin appears
@@ -398,7 +400,9 @@
       if (!r.ok) throw new Error(result.error || 'Generation failed');
       fill.style.width = '100%';
 
-      const pushMsg = result.pushed ? 'pushed to dev ✓' : 'saved locally (git push failed)';
+      const pushMsg = result.pushed
+        ? 'pushed to dev ✓'
+        : `saved locally (git push failed: ${result.gitError || 'unknown'})`;
       setUploadStatus(`Skin "${name}" generated & ${pushMsg}`, result.pushed ? 'ok' : 'error');
       refreshSkins();
     } catch (e) {
