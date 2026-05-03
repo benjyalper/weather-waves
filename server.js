@@ -373,19 +373,20 @@ app.post('/api/revert-main-to-default', async (req, res) => {
 
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
 // Source PNG: 1024 × 2180 (matches iPhone 1:2.13 aspect ratio).
-// Each slice maps to its iPhone element with proportions chosen from a real
-// iPhone screenshot of the live app. Section heights as % of 2180:
-//   Header  28% │ Drum 10% │ Cols-gap 8% │ Weather 12% │ Wave 12% │ Wind 12%
-//   Bunting 2%  │ Sun  16%
+// Slice heights tuned to match the real mobile CSS element proportions, so
+// each slice's aspect ratio matches the element it fills (no cover-cropping
+// or stretching). Section heights as % of 2180:
+//   Header 30% │ Drum 10% │ Cols-gap 7% │ Weather 13% │ Wave 13% │ Wind 13%
+//   Bunting 2% │ Sun 12%
 const SKIN_SLICES = [
-  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 610 },
-  { file: 'drum-bg.png',         left: 0,   top: 610,  width: 1024, height: 218 },
-  { file: 'weather-card-bg.png', left: 0,   top: 1003, width: 1024, height: 262 },
-  { file: 'wave-row-bg.png',     left: 0,   top: 1265, width: 1024, height: 261 },
-  { file: 'wind-row-bg.png',     left: 0,   top: 1526, width: 1024, height: 260 },
-  { file: 'bunting-bg.png',      left: 0,   top: 1786, width: 1024, height: 44  },
-  { file: 'sunset-bg.png',       left: 0,   top: 1830, width: 512,  height: 350 },
-  { file: 'sunrise-bg.png',      left: 512, top: 1830, width: 512,  height: 350 },
+  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 654 },
+  { file: 'drum-bg.png',         left: 0,   top: 654,  width: 1024, height: 218 },
+  { file: 'weather-card-bg.png', left: 0,   top: 1024, width: 1024, height: 283 },
+  { file: 'wave-row-bg.png',     left: 0,   top: 1307, width: 1024, height: 283 },
+  { file: 'wind-row-bg.png',     left: 0,   top: 1590, width: 1024, height: 283 },
+  { file: 'bunting-bg.png',      left: 0,   top: 1873, width: 1024, height: 44  },
+  { file: 'sunset-bg.png',       left: 0,   top: 1917, width: 512,  height: 263 },
+  { file: 'sunrise-bg.png',      left: 512, top: 1917, width: 512,  height: 263 },
 ];
 
 const SOURCE_W = 1024;
