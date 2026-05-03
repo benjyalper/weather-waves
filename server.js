@@ -442,12 +442,20 @@ app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
     if (!skinName) return res.status(400).json({ error: 'Skin name is required' });
     if (!req.file)  return res.status(400).json({ error: 'PNG file is required' });
 
-    // Validate dimensions
+    // Auto-resize to canonical 1024×2180. Reject only if aspect ratio is wildly
+    // off (more than 15% from target) — otherwise slight stretch/scale is fine.
     const src = await Jimp.read(req.file.buffer);
-    if (src.bitmap.width !== SOURCE_W || src.bitmap.height !== SOURCE_H) {
+    const inAspect     = src.bitmap.width / src.bitmap.height;
+    const targetAspect = SOURCE_W / SOURCE_H;
+    const aspectDelta  = Math.abs(inAspect - targetAspect) / targetAspect;
+    if (aspectDelta > 0.15) {
       return res.status(400).json({
-        error: `Image must be exactly ${SOURCE_W}×${SOURCE_H} px. Got ${src.bitmap.width}×${src.bitmap.height}.`
+        error: `Image aspect ratio (${src.bitmap.width}×${src.bitmap.height}) is too far from ${SOURCE_W}×${SOURCE_H}. ` +
+               `Got ratio 1:${(1/inAspect).toFixed(2)}, expected 1:${(1/targetAspect).toFixed(2)}.`
       });
+    }
+    if (src.bitmap.width !== SOURCE_W || src.bitmap.height !== SOURCE_H) {
+      src.resize(SOURCE_W, SOURCE_H);
     }
 
     // Create skin dirs
