@@ -371,16 +371,24 @@ app.post('/api/revert-main-to-default', async (req, res) => {
 });
 
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
+// Source PNG: 1024 × 2180 (matches iPhone 1:2.13 aspect ratio).
+// Each slice maps to its iPhone element with proportions chosen from a real
+// iPhone screenshot of the live app. Section heights as % of 2180:
+//   Header  28% │ Drum 10% │ Cols-gap 8% │ Weather 12% │ Wave 12% │ Wind 12%
+//   Bunting 2%  │ Sun  16%
 const SKIN_SLICES = [
-  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 290 },
-  { file: 'drum-bg.png',         left: 0,   top: 290,  width: 1024, height: 160 },
-  { file: 'weather-card-bg.png', left: 340, top: 580,  width: 345,  height: 185 },
-  { file: 'wave-row-bg.png',     left: 0,   top: 770,  width: 1024, height: 210 },
-  { file: 'wind-row-bg.png',     left: 0,   top: 980,  width: 1024, height: 105 },
-  { file: 'bunting-bg.png',      left: 0,   top: 1085, width: 1024, height: 50  },
-  { file: 'sunset-bg.png',       left: 0,   top: 1135, width: 512,  height: 155 },
-  { file: 'sunrise-bg.png',      left: 512, top: 1135, width: 512,  height: 155 },
+  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 610 },
+  { file: 'drum-bg.png',         left: 0,   top: 610,  width: 1024, height: 218 },
+  { file: 'weather-card-bg.png', left: 358, top: 1003, width: 308,  height: 262 },
+  { file: 'wave-row-bg.png',     left: 0,   top: 1265, width: 1024, height: 261 },
+  { file: 'wind-row-bg.png',     left: 0,   top: 1526, width: 1024, height: 260 },
+  { file: 'bunting-bg.png',      left: 0,   top: 1786, width: 1024, height: 44  },
+  { file: 'sunset-bg.png',       left: 0,   top: 1830, width: 512,  height: 350 },
+  { file: 'sunrise-bg.png',      left: 512, top: 1830, width: 512,  height: 350 },
 ];
+
+const SOURCE_W = 1024;
+const SOURCE_H = 2180;
 
 function skinCSS(name) {
   return `/* ${name} skin — auto-generated */
@@ -436,9 +444,9 @@ app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
 
     // Validate dimensions
     const src = await Jimp.read(req.file.buffer);
-    if (src.bitmap.width !== 1024 || src.bitmap.height !== 1536) {
+    if (src.bitmap.width !== SOURCE_W || src.bitmap.height !== SOURCE_H) {
       return res.status(400).json({
-        error: `Image must be exactly 1024×1536 px. Got ${src.bitmap.width}×${src.bitmap.height}.`
+        error: `Image must be exactly ${SOURCE_W}×${SOURCE_H} px. Got ${src.bitmap.width}×${src.bitmap.height}.`
       });
     }
 
@@ -477,6 +485,62 @@ app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
     res.json({ ok: true, name: skinName, pushed, gitError });
   } catch (err) {
     console.error('[upload-skin]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Generates a template grid PNG (1024×2180) with semi-transparent labelled
+// boxes for every slice region — attach to GPT prompts so generated art
+// lands in the right places.
+app.get('/api/skin-template', async (req, res) => {
+  try {
+    const REGIONS = [
+      { ...SKIN_SLICES[0], label: 'HEADER',     fill: 0x4FC3F7AA, border: 0x0D47A1FF }, // sky blue
+      { ...SKIN_SLICES[1], label: 'DRUM',       fill: 0xFFB74DAA, border: 0xE65100FF }, // amber
+      { ...SKIN_SLICES[2], label: 'WX-CARD',    fill: 0xA5D6A7AA, border: 0x2E7D32FF }, // green
+      { ...SKIN_SLICES[3], label: 'WAVE-ROW',   fill: 0x80DEEAAA, border: 0x006064FF }, // teal
+      { ...SKIN_SLICES[4], label: 'WIND-ROW',   fill: 0xCE93D8AA, border: 0x4A148CFF }, // purple
+      { ...SKIN_SLICES[5], label: 'BUNTING',    fill: 0xFFCDD2AA, border: 0xB71C1CFF }, // red
+      { ...SKIN_SLICES[6], label: 'SUNSET',     fill: 0xFFAB91AA, border: 0xBF360CFF }, // orange
+      { ...SKIN_SLICES[7], label: 'SUNRISE',    fill: 0xFFF59DAA, border: 0xF57F17FF }, // yellow
+    ];
+
+    const img = new Jimp(SOURCE_W, SOURCE_H, 0xFFFFFFFF);
+
+    // Load font for labels
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+
+    for (const r of REGIONS) {
+      // Fill region
+      img.scan(r.left, r.top, r.width, r.height, function (x, y, idx) {
+        this.bitmap.data[idx]     = (r.fill >>> 24) & 0xFF;
+        this.bitmap.data[idx + 1] = (r.fill >>> 16) & 0xFF;
+        this.bitmap.data[idx + 2] = (r.fill >>> 8)  & 0xFF;
+        this.bitmap.data[idx + 3] = r.fill & 0xFF;
+      });
+      // Border (top, bottom, left, right – 4px thick)
+      const drawBorder = (x, y, w, h) => img.scan(x, y, w, h, function (px, py, idx) {
+        this.bitmap.data[idx]     = (r.border >>> 24) & 0xFF;
+        this.bitmap.data[idx + 1] = (r.border >>> 16) & 0xFF;
+        this.bitmap.data[idx + 2] = (r.border >>> 8)  & 0xFF;
+        this.bitmap.data[idx + 3] = r.border & 0xFF;
+      });
+      drawBorder(r.left,             r.top,                    r.width, 4);
+      drawBorder(r.left,             r.top + r.height - 4,     r.width, 4);
+      drawBorder(r.left,             r.top,                    4,       r.height);
+      drawBorder(r.left + r.width-4, r.top,                    4,       r.height);
+
+      // Label centered in region
+      const text = `${r.label}\n${r.width}×${r.height} @ ${r.left},${r.top}`;
+      img.print(font, r.left + 12, r.top + 12, text, r.width - 24);
+    }
+
+    const buf = await img.getBufferAsync(Jimp.MIME_PNG);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="skin-template-${SOURCE_W}x${SOURCE_H}.png"`);
+    res.end(buf);
+  } catch (err) {
+    console.error('[skin-template]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
