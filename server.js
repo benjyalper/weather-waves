@@ -81,6 +81,7 @@ function infraFiles() {
   return [
     'server.js', 'package.json', 'package-lock.json',
     'public/index.html', 'public/style.css', 'public/script.js',
+    'public/admin.html', 'public/upload.html',
   ].filter(f => fs.existsSync(path.join(__dirname, f)))
    .map(f => ({ path: f, content: fs.readFileSync(path.join(__dirname, f)) }));
 }
@@ -317,7 +318,7 @@ app.post('/api/deploy-to-main', express.json(), async (req, res) => {
     if (fs.existsSync(WORKTREE)) execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
-    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js']) {
+    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js','public/admin.html','public/upload.html']) {
       const src = path.join(__dirname, f); const dst = path.join(WORKTREE, f);
       if (fs.existsSync(src)) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); }
     }
@@ -355,7 +356,7 @@ app.post('/api/revert-main-to-default', async (req, res) => {
     if (fs.existsSync(WORKTREE)) execSync(`git worktree remove --force "${WORKTREE}"`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git fetch origin main`, { cwd: __dirname, stdio: 'pipe' });
     execSync(`git worktree add "${WORKTREE}" origin/main`, { cwd: __dirname, stdio: 'pipe' });
-    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js']) {
+    for (const f of ['server.js','package.json','package-lock.json','public/index.html','public/style.css','public/script.js','public/admin.html','public/upload.html']) {
       const src = path.join(__dirname, f); const dst = path.join(WORKTREE, f);
       if (fs.existsSync(src)) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst); }
     }
@@ -373,19 +374,20 @@ app.post('/api/revert-main-to-default', async (req, res) => {
 
 // ─── Skin Upload / Slicer ─────────────────────────────────────────────────────
 // Source PNG: 1024 × 2180 (matches iPhone 1:2.13 aspect ratio).
-// Each slice maps to its iPhone element with proportions chosen from a real
-// iPhone screenshot of the live app. Section heights as % of 2180:
-//   Header  28% │ Drum 10% │ Cols-gap 8% │ Weather 12% │ Wave 12% │ Wind 12%
-//   Bunting 2%  │ Sun  16%
+// Slice heights tuned to match the real mobile CSS element proportions, so
+// each slice's aspect ratio matches the element it fills (no cover-cropping
+// or stretching). Section heights as % of 2180:
+//   Header 30% │ Drum 10% │ Cols-gap 7% │ Weather 13% │ Wave 13% │ Wind 13%
+//   Bunting 2% │ Sun 12%
 const SKIN_SLICES = [
-  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 610 },
-  { file: 'drum-bg.png',         left: 0,   top: 610,  width: 1024, height: 218 },
-  { file: 'weather-card-bg.png', left: 0,   top: 1003, width: 1024, height: 262 },
-  { file: 'wave-row-bg.png',     left: 0,   top: 1265, width: 1024, height: 261 },
-  { file: 'wind-row-bg.png',     left: 0,   top: 1526, width: 1024, height: 260 },
-  { file: 'bunting-bg.png',      left: 0,   top: 1786, width: 1024, height: 44  },
-  { file: 'sunset-bg.png',       left: 0,   top: 1830, width: 512,  height: 350 },
-  { file: 'sunrise-bg.png',      left: 512, top: 1830, width: 512,  height: 350 },
+  { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 654 },
+  { file: 'drum-bg.png',         left: 0,   top: 654,  width: 1024, height: 218 },
+  { file: 'weather-card-bg.png', left: 0,   top: 1024, width: 1024, height: 283 },
+  { file: 'wave-row-bg.png',     left: 0,   top: 1307, width: 1024, height: 283 },
+  { file: 'wind-row-bg.png',     left: 0,   top: 1590, width: 1024, height: 283 },
+  { file: 'bunting-bg.png',      left: 0,   top: 1873, width: 1024, height: 44  },
+  { file: 'sunset-bg.png',       left: 0,   top: 1917, width: 512,  height: 263 },
+  { file: 'sunrise-bg.png',      left: 512, top: 1917, width: 512,  height: 263 },
 ];
 
 const SOURCE_W = 1024;
