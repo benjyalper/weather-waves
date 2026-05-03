@@ -379,7 +379,7 @@ app.post('/api/revert-main-to-default', async (req, res) => {
 const SKIN_SLICES = [
   { file: 'header-bg.png',       left: 0,   top: 0,    width: 1024, height: 610 },
   { file: 'drum-bg.png',         left: 0,   top: 610,  width: 1024, height: 218 },
-  { file: 'weather-card-bg.png', left: 358, top: 1003, width: 308,  height: 262 },
+  { file: 'weather-card-bg.png', left: 0,   top: 1003, width: 1024, height: 262 },
   { file: 'wave-row-bg.png',     left: 0,   top: 1265, width: 1024, height: 261 },
   { file: 'wind-row-bg.png',     left: 0,   top: 1526, width: 1024, height: 260 },
   { file: 'bunting-bg.png',      left: 0,   top: 1786, width: 1024, height: 44  },
@@ -404,12 +404,18 @@ function skinCSS(name) {
 body { background: linear-gradient(160deg, #FBF3DC 0%, #F5E6C0 55%, #EDD5A0 100%); }
 header { background: url('/skins/${name}/skin/header-bg.png') center center / cover no-repeat; }
 .drum-wrapper { background: url('/skins/${name}/skin/drum-bg.png') center center / 100% 100% no-repeat; }
-.wx-cell { background: url('/skins/${name}/skin/weather-card-bg.png') center center / cover no-repeat; }
+.wx-cell { background: url('/skins/${name}/skin/weather-card-bg.png') center center / 300% 100% no-repeat; }
+#weatherRow .mx-cell:nth-child(1) { background-position: right center; }
+#weatherRow .mx-cell:nth-child(2) { background-position: center center; }
+#weatherRow .mx-cell:nth-child(3) { background-position: left center; }
 .wv-cell { background: url('/skins/${name}/skin/wave-row-bg.png') center center / 300% 100% no-repeat; }
 #waveRow .mx-cell:nth-child(1) { background-position: right center; }
 #waveRow .mx-cell:nth-child(2) { background-position: center center; }
 #waveRow .mx-cell:nth-child(3) { background-position: left center; }
 .wd-cell { background: url('/skins/${name}/skin/wind-row-bg.png') center center / 300% 100% no-repeat; }
+#windRow .mx-cell:nth-child(1) { background-position: right center; }
+#windRow .mx-cell:nth-child(2) { background-position: center center; }
+#windRow .mx-cell:nth-child(3) { background-position: left center; }
 .drum-item { color: rgba(0,56,168,0.55); }
 .drum-item.active { color: #002FA7; }
 .drum-ring { border: 2px solid rgba(0,56,168,0.65); }
@@ -505,7 +511,7 @@ app.get('/api/skin-template', async (req, res) => {
     const REGIONS = [
       { ...SKIN_SLICES[0], label: 'HEADER',     fill: 0x4FC3F7AA, border: 0x0D47A1FF }, // sky blue
       { ...SKIN_SLICES[1], label: 'DRUM',       fill: 0xFFB74DAA, border: 0xE65100FF }, // amber
-      { ...SKIN_SLICES[2], label: 'WX-CARD',    fill: 0xA5D6A7AA, border: 0x2E7D32FF }, // green
+      { ...SKIN_SLICES[2], label: 'WEATHER-ROW', fill: 0xA5D6A7AA, border: 0x2E7D32FF }, // green
       { ...SKIN_SLICES[3], label: 'WAVE-ROW',   fill: 0x80DEEAAA, border: 0x006064FF }, // teal
       { ...SKIN_SLICES[4], label: 'WIND-ROW',   fill: 0xCE93D8AA, border: 0x4A148CFF }, // purple
       { ...SKIN_SLICES[5], label: 'BUNTING',    fill: 0xFFCDD2AA, border: 0xB71C1CFF }, // red
