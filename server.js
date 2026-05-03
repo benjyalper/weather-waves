@@ -92,6 +92,7 @@ const ADMIN_PIN = process.env.ADMIN_PIN;
 if (ADMIN_PIN) {
   const PROTECTED_PATHS = ['/admin.html', '/upload.html'];
   const PROTECTED_API   = ['/api/schedule', '/api/skins', '/api/upload-skin',
+                           '/api/generate-skin', '/api/skin-template',
                            '/api/download-skin', '/api/deploy-to-main', '/api/revert-main-to-default'];
   app.use((req, res, next) => {
     const needsAuth = PROTECTED_PATHS.includes(req.path) ||
@@ -442,63 +443,91 @@ const upload = multer({
   }
 });
 
+// Shared helper — takes a Jimp image, slices it, saves to disk, pushes to dev
+async function processSkinImage(src, skinName) {
+  // Aspect-ratio guard + auto-resize
+  const inAspect     = src.bitmap.width / src.bitmap.height;
+  const targetAspect = SOURCE_W / SOURCE_H;
+  const aspectDelta  = Math.abs(inAspect - targetAspect) / targetAspect;
+  if (aspectDelta > 0.15) {
+    throw new Error(`Image aspect ratio (${src.bitmap.width}×${src.bitmap.height}) is too far from ${SOURCE_W}×${SOURCE_H}. ` +
+                    `Got ratio 1:${(1/inAspect).toFixed(2)}, expected 1:${(1/targetAspect).toFixed(2)}.`);
+  }
+  if (src.bitmap.width !== SOURCE_W || src.bitmap.height !== SOURCE_H) {
+    src.resize(SOURCE_W, SOURCE_H);
+  }
+
+  const skinDir  = path.join(SKINS_DIR, skinName);
+  const assetDir = path.join(skinDir, 'skin');
+  fs.mkdirSync(assetDir, { recursive: true });
+
+  await Promise.all(SKIN_SLICES.map(s => {
+    const crop = src.clone().crop(s.left, s.top, s.width, s.height);
+    return crop.writeAsync(path.join(assetDir, s.file));
+  }));
+
+  fs.writeFileSync(path.join(skinDir, 'style.css'), skinCSS(skinName));
+
+  let pushed = false, gitError = null;
+  if (GITHUB_TOKEN) {
+    try {
+      const files = readDirFiles(skinDir, `public/skins/${skinName}`);
+      await ghCommitFiles(files, `Add skin: ${skinName}`, 'dev');
+      pushed = true;
+    } catch (e) { gitError = e.message; }
+  } else {
+    try {
+      execSync(`git add public/skins/${skinName}`, { cwd: __dirname, stdio: 'pipe' });
+      execSync(`git commit -m "Add skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
+      execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
+      pushed = true;
+    } catch (e) { gitError = e.stderr?.toString() || e.message; }
+  }
+  return { pushed, gitError };
+}
+
 app.post('/api/upload-skin', upload.single('png'), async (req, res) => {
   try {
     const skinName = (req.body.name || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
     if (!skinName) return res.status(400).json({ error: 'Skin name is required' });
     if (!req.file)  return res.status(400).json({ error: 'PNG file is required' });
 
-    // Auto-resize to canonical 1024×2180. Reject only if aspect ratio is wildly
-    // off (more than 15% from target) — otherwise slight stretch/scale is fine.
     const src = await Jimp.read(req.file.buffer);
-    const inAspect     = src.bitmap.width / src.bitmap.height;
-    const targetAspect = SOURCE_W / SOURCE_H;
-    const aspectDelta  = Math.abs(inAspect - targetAspect) / targetAspect;
-    if (aspectDelta > 0.15) {
-      return res.status(400).json({
-        error: `Image aspect ratio (${src.bitmap.width}×${src.bitmap.height}) is too far from ${SOURCE_W}×${SOURCE_H}. ` +
-               `Got ratio 1:${(1/inAspect).toFixed(2)}, expected 1:${(1/targetAspect).toFixed(2)}.`
-      });
-    }
-    if (src.bitmap.width !== SOURCE_W || src.bitmap.height !== SOURCE_H) {
-      src.resize(SOURCE_W, SOURCE_H);
-    }
-
-    // Create skin dirs
-    const skinDir = path.join(SKINS_DIR, skinName);
-    const assetDir = path.join(skinDir, 'skin');
-    fs.mkdirSync(assetDir, { recursive: true });
-
-    // Slice and save
-    await Promise.all(SKIN_SLICES.map(s => {
-      const crop = src.clone().crop(s.left, s.top, s.width, s.height);
-      return crop.writeAsync(path.join(assetDir, s.file));
-    }));
-
-    // Write style.css
-    fs.writeFileSync(path.join(skinDir, 'style.css'), skinCSS(skinName));
-
-    // Git push
-    let pushed = false;
-    let gitError = null;
-    if (GITHUB_TOKEN) {
-      try {
-        const files = readDirFiles(skinDir, `public/skins/${skinName}`);
-        await ghCommitFiles(files, `Add skin: ${skinName}`, 'dev');
-        pushed = true;
-      } catch (e) { gitError = e.message; }
-    } else {
-      try {
-        execSync(`git add public/skins/${skinName}`, { cwd: __dirname, stdio: 'pipe' });
-        execSync(`git commit -m "Add skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
-        execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
-        pushed = true;
-      } catch (e) { gitError = e.stderr?.toString() || e.message; }
-    }
-
+    const { pushed, gitError } = await processSkinImage(src, skinName);
     res.json({ ok: true, name: skinName, pushed, gitError });
   } catch (err) {
     console.error('[upload-skin]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Generate skin from text prompt via Pollinations.ai (free, no auth, exact dims)
+app.post('/api/generate-skin', express.json(), async (req, res) => {
+  try {
+    const skinName = (req.body.name   || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const prompt   = (req.body.prompt || '').trim();
+    if (!skinName) return res.status(400).json({ error: 'Skin name is required' });
+    if (!prompt)   return res.status(400).json({ error: 'Prompt is required' });
+
+    // Pollinations endpoint — returns a PNG at exactly width × height
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+                `?width=${SOURCE_W}&height=${SOURCE_H}&nologo=true&enhance=true`;
+
+    // Generation can take 30-90 s; allow plenty of time
+    const ctrl    = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 120_000);
+    let r;
+    try {
+      r = await fetch(url, { signal: ctrl.signal });
+    } finally { clearTimeout(timeout); }
+    if (!r.ok) return res.status(502).json({ error: `Pollinations returned ${r.status}` });
+    const buf = Buffer.from(await r.arrayBuffer());
+
+    const src = await Jimp.read(buf);
+    const { pushed, gitError } = await processSkinImage(src, skinName);
+    res.json({ ok: true, name: skinName, pushed, gitError });
+  } catch (err) {
+    console.error('[generate-skin]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

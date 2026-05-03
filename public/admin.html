@@ -259,6 +259,15 @@
 
   <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
   <div class="upload-status" id="uploadStatus"></div>
+
+  <!-- ── Generate via Pollinations.ai ── -->
+  <div style="margin-top:24px;padding-top:20px;border-top:1px solid #334155">
+    <label class="field-label" for="genPrompt">Or generate from prompt (free, exact dimensions)</label>
+    <textarea id="genPrompt" rows="3" placeholder="e.g. wild west saloon skin, sheriff badge, wooden parchment cards"
+      style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:10px 14px;font-size:0.88rem;outline:none;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
+    <button class="btn-upload" id="genBtn" disabled onclick="doGenerate()" style="background:#7c3aed">⚡ Generate & Slice → Push to dev</button>
+    <p class="name-hint" style="margin-top:8px">Uses Pollinations.ai — generation can take 30–90 seconds.</p>
+  </div>
 </div>
 
 <!-- ── Schedule ── -->
@@ -294,6 +303,9 @@
   function checkUploadReady() {
     const nameOk = /^[a-z0-9][a-z0-9-]*$/.test(skinNameEl.value.trim());
     uploadBtn.disabled = !(selectedFile && nameOk);
+    const genBtn = document.getElementById('genBtn');
+    const promptOk = (document.getElementById('genPrompt').value || '').trim().length > 3;
+    if (genBtn) genBtn.disabled = !(promptOk && nameOk);
   }
 
   skinNameEl.addEventListener('input', () => {
@@ -351,6 +363,48 @@
     } catch (e) {
       setUploadStatus(e.message, 'error');
       uploadBtn.disabled = false;
+    }
+  }
+
+  // ── Generate from prompt (Pollinations.ai) ────────────────────────────────
+  document.getElementById('genPrompt').addEventListener('input', checkUploadReady);
+
+  async function doGenerate() {
+    const name   = skinNameEl.value.trim();
+    const prompt = document.getElementById('genPrompt').value.trim();
+    if (!name || !prompt) return;
+
+    const genBtn = document.getElementById('genBtn');
+    genBtn.disabled = true;
+    setUploadStatus('Generating with Pollinations… (may take 30–90s)', 'info');
+    const bar = document.getElementById('progressBar');
+    const fill = document.getElementById('progressFill');
+    bar.style.display = 'block';
+    fill.style.width = '15%';
+
+    // Indeterminate progress nudge while we wait
+    let pct = 15;
+    const tick = setInterval(() => { pct = Math.min(85, pct + 2); fill.style.width = pct + '%'; }, 1500);
+
+    try {
+      const r = await fetch('/api/generate-skin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, prompt })
+      });
+      clearInterval(tick);
+      fill.style.width = '95%';
+      const result = await r.json();
+      if (!r.ok) throw new Error(result.error || 'Generation failed');
+      fill.style.width = '100%';
+
+      const pushMsg = result.pushed ? 'pushed to dev ✓' : 'saved locally (git push failed)';
+      setUploadStatus(`Skin "${name}" generated & ${pushMsg}`, result.pushed ? 'ok' : 'error');
+      refreshSkins();
+    } catch (e) {
+      clearInterval(tick);
+      setUploadStatus(e.message, 'error');
+      genBtn.disabled = false;
     }
   }
 
