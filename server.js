@@ -133,7 +133,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/active-skin', (req, res) => {
   const schedule = JSON.parse(fs.readFileSync(path.join(__dirname, 'skin-schedule.json'), 'utf8'));
   const mmdd = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(5); // MM-DD (sv-SE always gives YYYY-MM-DD)
-  const active = schedule.find(s => s.name !== 'default' && mmdd >= s.start && mmdd <= s.end);
+  // Match by date AND require the skin folder to actually exist (otherwise stale
+  // schedule entries pointing at deleted skins would 404 the stylesheet and the
+  // page would silently fall back to the default ocean look).
+  const active = schedule.find(s =>
+    s.name !== 'default' &&
+    mmdd >= s.start && mmdd <= s.end &&
+    fs.existsSync(path.join(__dirname, 'public', 'skins', s.name, 'style.css'))
+  );
   res.json({ skin: active?.name ?? 'default' });
 });
 
