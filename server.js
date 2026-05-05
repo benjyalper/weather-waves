@@ -61,6 +61,22 @@ async function ghCommitFiles(files, message, branch) {
   return newCommit;
 }
 
+// Atomically delete multiple files from a branch via the Git Data API.
+// Uses sha:null in tree items to mark deletions.
+async function ghDeleteFiles(filePaths, message, branch) {
+  const ref    = await ghRequest('GET', `/repos/${GITHUB_REPO}/git/ref/heads/${branch}`);
+  const commit = await ghRequest('GET', `/repos/${GITHUB_REPO}/git/commits/${ref.object.sha}`);
+
+  const treeItems = filePaths.map(p => ({
+    path: p, mode: '100644', type: 'blob', sha: null
+  }));
+
+  const tree      = await ghRequest('POST',  `/repos/${GITHUB_REPO}/git/trees`,   { base_tree: commit.tree.sha, tree: treeItems });
+  const newCommit = await ghRequest('POST',  `/repos/${GITHUB_REPO}/git/commits`, { message, tree: tree.sha, parents: [ref.object.sha] });
+  await              ghRequest('PATCH', `/repos/${GITHUB_REPO}/git/refs/heads/${branch}`, { sha: newCommit.sha });
+  return newCommit;
+}
+
 // Recursively read all files under a local dir → [{ path (repo-relative), content: Buffer }]
 function readDirFiles(localDir, repoBase) {
   const results = [];
@@ -92,7 +108,7 @@ function infraFiles() {
 const ADMIN_PIN = process.env.ADMIN_PIN;
 if (ADMIN_PIN) {
   const PROTECTED_PATHS = ['/admin.html', '/upload.html'];
-  const PROTECTED_API   = ['/api/schedule', '/api/skins', '/api/upload-skin',
+  const PROTECTED_API   = ['/api/schedule', '/api/skins', '/api/skin/', '/api/upload-skin',
                            '/api/generate-skin', '/api/skin-template',
                            '/api/download-skin', '/api/deploy-to-main', '/api/revert-main-to-default'];
   app.use((req, res, next) => {
@@ -259,6 +275,58 @@ app.get('/api/skins', (req, res) => {
     fs.statSync(path.join(SKINS_DIR, d)).isDirectory()
   );
   res.json(dirs);
+});
+
+// Delete a skin: remove from disk, remove schedule entry, push deletion to dev
+app.delete('/api/skin/:name', async (req, res) => {
+  const skinName = (req.params.name || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (!skinName)              return res.status(400).json({ error: 'Skin name required' });
+  if (skinName === 'default') return res.status(400).json({ error: 'Cannot delete the default skin' });
+
+  const skinDir = path.join(SKINS_DIR, skinName);
+  if (!fs.existsSync(skinDir)) return res.status(404).json({ error: 'Skin not found' });
+
+  try {
+    // Collect repo-relative paths of every file in the skin folder before deleting from disk
+    const filesToDelete = readDirFiles(skinDir, `public/skins/${skinName}`).map(f => f.path);
+
+    // Remove from disk
+    fs.rmSync(skinDir, { recursive: true, force: true });
+
+    // Update schedule (drop any entries referencing this skin)
+    const schedule = JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8'));
+    const cleaned  = schedule.filter(s => s.name !== skinName);
+    const scheduleChanged = cleaned.length !== schedule.length;
+    if (scheduleChanged) fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(cleaned, null, 2));
+
+    // Push deletion + schedule update to dev
+    let pushed = false, gitError = null;
+    if (GITHUB_TOKEN) {
+      try {
+        await ghDeleteFiles(filesToDelete, `Delete skin: ${skinName}`, 'dev');
+        if (scheduleChanged) {
+          await ghCommitFiles(
+            [{ path: 'skin-schedule.json', content: JSON.stringify(cleaned, null, 2) }],
+            `Remove ${skinName} from schedule`, 'dev'
+          );
+        }
+        pushed = true;
+      } catch (e) { gitError = e.message; }
+    } else {
+      try {
+        execSync(`git rm -rf "public/skins/${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
+        if (scheduleChanged) execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
+        execSync(`git commit -m "Delete skin: ${skinName}"`, { cwd: __dirname, stdio: 'pipe' });
+        execSync('git push origin dev', { cwd: __dirname, stdio: 'pipe' });
+        pushed = true;
+      } catch (e) { gitError = e.stderr?.toString() || e.message; }
+    }
+
+    res.json({ ok: true, name: skinName, pushed, gitError });
+  } catch (err) {
+    console.error('[delete-skin]', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/schedule', (req, res) => {
