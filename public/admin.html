@@ -549,7 +549,17 @@
     Promise.all([
       fetch('/api/skins').then(r => r.json()),
       fetch('/api/schedule').then(r => r.json())
-    ]).then(([s, sc]) => { skins = s; schedule = sc; renderGrid(); });
+    ]).then(([s, sc]) => {
+      skins    = s;
+      // New shape: { schedule: [...], stale: [names] }; old: [...]
+      schedule = Array.isArray(sc) ? sc : (sc.schedule || []);
+      const staleNames = Array.isArray(sc) ? [] : (sc.stale || []);
+      if (staleNames.length) {
+        setStatus(`⚠ Auto-pruned stale schedule entries (deleted skins): ${staleNames.join(', ')}. Click Save to persist.`, 'error');
+        markDirty();
+      }
+      renderGrid();
+    });
   }
 
   // ── Deploy to Main ────────────────────────────────────────────────────────

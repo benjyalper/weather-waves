@@ -336,16 +336,37 @@ app.delete('/api/skin/:name', async (req, res) => {
   }
 });
 
+// Helper — given a schedule array, return [validEntries, staleEntries]
+function partitionSchedule(schedule) {
+  const valid = [], stale = [];
+  for (const s of schedule) {
+    if (fs.existsSync(path.join(SKINS_DIR, s.name, 'style.css'))) valid.push(s);
+    else stale.push(s);
+  }
+  return { valid, stale };
+}
+
 app.get('/api/schedule', (req, res) => {
-  res.json(JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8')));
+  const raw = JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8'));
+  const { valid, stale } = partitionSchedule(raw);
+  // Surface stale entries so the admin can warn the user about auto-pruning
+  res.json({ schedule: valid, stale: stale.map(s => s.name) });
 });
 
 app.post('/api/schedule', express.json(), async (req, res) => {
-  fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
+  // Validation: every entry must point to an existing skin folder
+  const { valid, stale } = partitionSchedule(req.body);
+  if (stale.length) {
+    return res.status(400).json({
+      error: `Cannot save: these skins don't exist: ${stale.map(s => s.name).join(', ')}. Remove them from the schedule first.`
+    });
+  }
+
+  fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(valid, null, 2));
   if (GITHUB_TOKEN) {
     try {
       await ghCommitFiles(
-        [{ path: 'skin-schedule.json', content: JSON.stringify(req.body, null, 2) }],
+        [{ path: 'skin-schedule.json', content: JSON.stringify(valid, null, 2) }],
         'Update skin schedule via admin', 'dev'
       );
       res.json({ ok: true, pushed: true });
@@ -354,7 +375,6 @@ app.post('/api/schedule', express.json(), async (req, res) => {
       res.json({ ok: true, pushed: false, gitError: err.message });
     }
   } else {
-    // Local git CLI fallback
     try {
       execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
       try { execSync('git commit -m "Update skin schedule via admin"', { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
