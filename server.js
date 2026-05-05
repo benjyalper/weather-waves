@@ -221,6 +221,31 @@ function fetchJSON(url, label = 'Upstream', timeoutMs = 10000) {
   });
 }
 
+// In-memory cache keyed by URL. Avoids hammering Open-Meteo (429s).
+const upstreamCache = new Map();   // url -> { ts, data }
+const CACHE_TTL_MS  = 5 * 60 * 1000; // 5 minutes
+
+async function fetchJSONCached(url, label) {
+  const now    = Date.now();
+  const cached = upstreamCache.get(url);
+  if (cached && now - cached.ts < CACHE_TTL_MS) {
+    console.log(`[${label}] cache hit (age ${Math.round((now - cached.ts)/1000)}s)`);
+    return cached.data;
+  }
+  // Stale-while-error: if upstream fails, fall back to the stale cache
+  try {
+    const data = await fetchJSON(url, label, 10000);
+    upstreamCache.set(url, { ts: now, data });
+    return data;
+  } catch (err) {
+    if (cached) {
+      console.warn(`[${label}] upstream failed, serving stale cache: ${err.message}`);
+      return cached.data;
+    }
+    throw err;
+  }
+}
+
 app.get('/api/weather', async (req, res) => {
   const lat = parseCoordinate(req.query.lat, 32.08);
   const lon = parseCoordinate(req.query.lon, 34.78);
@@ -235,7 +260,7 @@ app.get('/api/weather', async (req, res) => {
     `&timezone=Asia%2FJerusalem`;
 
   try {
-    const data = await fetchJSON(url, 'Weather', 10000);
+    const data = await fetchJSONCached(url, 'Weather');
     res.json(data);
   } catch (err) {
     console.error('[Weather] Error:', err.message);
@@ -258,7 +283,7 @@ app.get('/api/marine', async (req, res) => {
     `&timezone=Asia%2FJerusalem`;
 
   try {
-    const data = await fetchJSON(url, 'Marine', 10000);
+    const data = await fetchJSONCached(url, 'Marine');
     res.json(data);
   } catch (err) {
     console.error('[Marine] Error:', err.message);
