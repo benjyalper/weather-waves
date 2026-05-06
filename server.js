@@ -133,7 +133,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/active-skin', (req, res) => {
   const schedule = JSON.parse(fs.readFileSync(path.join(__dirname, 'skin-schedule.json'), 'utf8'));
   const mmdd = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(5); // MM-DD (sv-SE always gives YYYY-MM-DD)
-  const active = schedule.find(s => s.name !== 'default' && mmdd >= s.start && mmdd <= s.end);
+  // Match by date AND require the skin folder to actually exist (otherwise stale
+  // schedule entries pointing at deleted skins would 404 the stylesheet and the
+  // page would silently fall back to the default ocean look).
+  const active = schedule.find(s =>
+    s.name !== 'default' &&
+    mmdd >= s.start && mmdd <= s.end &&
+    fs.existsSync(path.join(__dirname, 'public', 'skins', s.name, 'style.css'))
+  );
   res.json({ skin: active?.name ?? 'default' });
 });
 
@@ -214,6 +221,31 @@ function fetchJSON(url, label = 'Upstream', timeoutMs = 10000) {
   });
 }
 
+// In-memory cache keyed by URL. Avoids hammering Open-Meteo (429s).
+const upstreamCache = new Map();   // url -> { ts, data }
+const CACHE_TTL_MS  = 5 * 60 * 1000; // 5 minutes
+
+async function fetchJSONCached(url, label) {
+  const now    = Date.now();
+  const cached = upstreamCache.get(url);
+  if (cached && now - cached.ts < CACHE_TTL_MS) {
+    console.log(`[${label}] cache hit (age ${Math.round((now - cached.ts)/1000)}s)`);
+    return cached.data;
+  }
+  // Stale-while-error: if upstream fails, fall back to the stale cache
+  try {
+    const data = await fetchJSON(url, label, 10000);
+    upstreamCache.set(url, { ts: now, data });
+    return data;
+  } catch (err) {
+    if (cached) {
+      console.warn(`[${label}] upstream failed, serving stale cache: ${err.message}`);
+      return cached.data;
+    }
+    throw err;
+  }
+}
+
 app.get('/api/weather', async (req, res) => {
   const lat = parseCoordinate(req.query.lat, 32.08);
   const lon = parseCoordinate(req.query.lon, 34.78);
@@ -228,7 +260,7 @@ app.get('/api/weather', async (req, res) => {
     `&timezone=Asia%2FJerusalem`;
 
   try {
-    const data = await fetchJSON(url, 'Weather', 10000);
+    const data = await fetchJSONCached(url, 'Weather');
     res.json(data);
   } catch (err) {
     console.error('[Weather] Error:', err.message);
@@ -251,7 +283,7 @@ app.get('/api/marine', async (req, res) => {
     `&timezone=Asia%2FJerusalem`;
 
   try {
-    const data = await fetchJSON(url, 'Marine', 10000);
+    const data = await fetchJSONCached(url, 'Marine');
     res.json(data);
   } catch (err) {
     console.error('[Marine] Error:', err.message);
@@ -329,16 +361,37 @@ app.delete('/api/skin/:name', async (req, res) => {
   }
 });
 
+// Helper — given a schedule array, return [validEntries, staleEntries]
+function partitionSchedule(schedule) {
+  const valid = [], stale = [];
+  for (const s of schedule) {
+    if (fs.existsSync(path.join(SKINS_DIR, s.name, 'style.css'))) valid.push(s);
+    else stale.push(s);
+  }
+  return { valid, stale };
+}
+
 app.get('/api/schedule', (req, res) => {
-  res.json(JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8')));
+  const raw = JSON.parse(fs.readFileSync(SCHEDULE_PATH, 'utf8'));
+  const { valid, stale } = partitionSchedule(raw);
+  // Surface stale entries so the admin can warn the user about auto-pruning
+  res.json({ schedule: valid, stale: stale.map(s => s.name) });
 });
 
 app.post('/api/schedule', express.json(), async (req, res) => {
-  fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(req.body, null, 2));
+  // Validation: every entry must point to an existing skin folder
+  const { valid, stale } = partitionSchedule(req.body);
+  if (stale.length) {
+    return res.status(400).json({
+      error: `Cannot save: these skins don't exist: ${stale.map(s => s.name).join(', ')}. Remove them from the schedule first.`
+    });
+  }
+
+  fs.writeFileSync(SCHEDULE_PATH, JSON.stringify(valid, null, 2));
   if (GITHUB_TOKEN) {
     try {
       await ghCommitFiles(
-        [{ path: 'skin-schedule.json', content: JSON.stringify(req.body, null, 2) }],
+        [{ path: 'skin-schedule.json', content: JSON.stringify(valid, null, 2) }],
         'Update skin schedule via admin', 'dev'
       );
       res.json({ ok: true, pushed: true });
@@ -347,7 +400,6 @@ app.post('/api/schedule', express.json(), async (req, res) => {
       res.json({ ok: true, pushed: false, gitError: err.message });
     }
   } else {
-    // Local git CLI fallback
     try {
       execSync('git add skin-schedule.json', { cwd: __dirname, stdio: 'pipe' });
       try { execSync('git commit -m "Update skin schedule via admin"', { cwd: __dirname, stdio: 'pipe' }); } catch (_) {}
